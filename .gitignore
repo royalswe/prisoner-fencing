@@ -33,5 +33,5 @@ main
 .DS_Store
 
 # local certs
-server.key
-server.crt
+localhost+2-key.pem
+localhost+2.pem

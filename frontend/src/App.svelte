@@ -23,9 +23,9 @@
       window.location.hostname === "localhost" ||
       window.location.hostname === "127.0.0.1"
     ) {
-      wsUrl = `ws://${window.location.hostname}:8080/ws`;
+      wsUrl = `wss://${window.location.hostname}:8080/ws`;
     } else {
-      wsUrl = "ws://prisonerfencing-server.fumlig.com/ws";
+      wsUrl = "wss://prisonerfencing-server.fumlig.com/ws";
     }
     ws = new WebSocket(wsUrl);
     ws.onopen = () => {

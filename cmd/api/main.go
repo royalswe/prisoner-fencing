@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -47,7 +48,14 @@ func main() {
 	// Run graceful shutdown in a separate goroutine
 	go gracefulShutdown(server, done)
 
-	err := server.ListenAndServe()
+	// Check if we're in development (has local certs) or production (Dokploy)
+
+	var err error
+	if _, statErr := os.Stat("localhost+2.pem"); statErr == nil {
+		err = server.ListenAndServeTLS("localhost+2.pem", "localhost+2-key.pem")
+	} else {
+		err = server.ListenAndServe()
+	}
 	if err != nil && err != http.ErrServerClosed {
 		panic(fmt.Sprintf("http server error: %s", err))
 	}
