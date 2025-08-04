@@ -15,7 +15,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// 	mux.Handle("/", http.FileServer(http.Dir(frontendDir)))
 	// }
 	// Register routes
-	//mux.HandleFunc("/", s.HelloWorldHandler)
+	mux.HandleFunc("/", s.HelloWorldHandler)
 
 	mux.HandleFunc("/health", s.healthHandler)
 	//mux.HandleFunc("/ws", s.websocketHandler)

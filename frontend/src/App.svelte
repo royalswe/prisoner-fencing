@@ -18,7 +18,16 @@
   let lobbyError = "";
 
   function connect() {
-    ws = new WebSocket("ws://" + window.location.hostname + ":8080/ws");
+    let wsUrl = "";
+    if (
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1"
+    ) {
+      wsUrl = `ws://${window.location.hostname}:8080/ws`;
+    } else {
+      wsUrl = "wss://prisonerfencing-server.fumlig.com/ws";
+    }
+    ws = new WebSocket(wsUrl);
     ws.onopen = () => {
       connected = true;
       console.log(`WebSocket connected as player ${playerId}`);
@@ -80,8 +89,6 @@
   }
 
   function sendMessage(message: string) {
-    // {"type":"new_message","payload":{"message":"ewq","from":"percy","sent":"2025-08-04T22:08:09.06524+02:00"}}
-    //
     if (ws) {
       ws.send(
         JSON.stringify({
