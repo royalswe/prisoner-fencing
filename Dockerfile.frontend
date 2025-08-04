@@ -1,0 +1,27 @@
+FROM node:22-alpine AS build
+
+WORKDIR /app
+
+# Copy package files
+COPY frontend/package*.json ./
+RUN npm ci
+
+# Copy frontend source
+COPY frontend/ .
+
+# Build the frontend
+RUN npm run build
+
+FROM node:22-alpine AS production
+
+# Install serve globally
+RUN npm install -g serve
+
+# Copy built assets
+COPY --from=build /app/dist /app/dist
+
+WORKDIR /app
+
+EXPOSE 5173
+
+CMD ["serve", "-s", "dist", "-l", "5173"]
