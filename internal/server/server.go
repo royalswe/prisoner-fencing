@@ -9,7 +9,7 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 
-	"prison-escape/internal/database"
+	"prisoner-fencing/internal/database"
 )
 
 type Server struct {

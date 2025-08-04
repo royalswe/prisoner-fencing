@@ -1,4 +1,4 @@
-module prison-escape
+module prisoner-fencing
 
 go 1.24.4
 

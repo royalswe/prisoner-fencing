@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"prison-escape/internal/server"
+	"prisoner-fencing/internal/server"
 )
 
 func gracefulShutdown(apiServer *http.Server, done chan bool) {

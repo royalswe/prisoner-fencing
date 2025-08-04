@@ -4,22 +4,23 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-
-	"fmt"
-	"time"
-
-	"github.com/coder/websocket"
 )
 
 func (s *Server) RegisterRoutes() http.Handler {
 	mux := http.NewServeMux()
 
+	// Serve front-end files
+	// frontendDir := "frontend"
+	// if _, err := os.Stat(frontendDir); err == nil {
+	// 	mux.Handle("/", http.FileServer(http.Dir(frontendDir)))
+	// }
 	// Register routes
-	mux.HandleFunc("/", s.HelloWorldHandler)
+	//mux.HandleFunc("/", s.HelloWorldHandler)
 
 	mux.HandleFunc("/health", s.healthHandler)
-
-	mux.HandleFunc("/websocket", s.websocketHandler)
+	//mux.HandleFunc("/ws", s.websocketHandler)
+	hub := NewHub()
+	mux.HandleFunc("/ws", hub.serveWS)
 
 	// Wrap the mux with CORS middleware
 	return s.corsMiddleware(mux)
@@ -66,26 +67,5 @@ func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(resp); err != nil {
 		log.Printf("Failed to write response: %v", err)
-	}
-}
-
-func (s *Server) websocketHandler(w http.ResponseWriter, r *http.Request) {
-	socket, err := websocket.Accept(w, r, nil)
-	if err != nil {
-		http.Error(w, "Failed to open websocket", http.StatusInternalServerError)
-		return
-	}
-	defer socket.Close(websocket.StatusGoingAway, "Server closing websocket")
-
-	ctx := r.Context()
-	socketCtx := socket.CloseRead(ctx)
-
-	for {
-		payload := fmt.Sprintf("server timestamp: %d", time.Now().UnixNano())
-		if err := socket.Write(socketCtx, websocket.MessageText, []byte(payload)); err != nil {
-			log.Printf("Failed to write to socket: %v", err)
-			break
-		}
-		time.Sleep(2 * time.Second)
 	}
 }

@@ -3,12 +3,13 @@
 # Build the application
 all: build test
 
-build:
-	@echo "Building..."
-	
-	
+build-linux:
+	@echo "Building for Linux..."
 	@CGO_ENABLED=1 GOOS=linux go build -o main cmd/api/main.go
 
+build:
+	@echo "Building..."
+	@go build -o main cmd/api/main.go
 # Run the application
 run:
 	@go run cmd/api/main.go &
@@ -58,5 +59,9 @@ watch:
                 exit 1; \
             fi; \
         fi
+
+watch-all:
+	@$(MAKE) watch &
+	@npm run dev --prefix ./frontend
 
 .PHONY: all build run test clean watch
