@@ -25,7 +25,7 @@
     ) {
       wsUrl = `ws://${window.location.hostname}:8080/ws`;
     } else {
-      wsUrl = "wss://prisonerfencing-server.fumlig.com/ws";
+      wsUrl = "ws://prisonerfencing-server.fumlig.com/ws";
     }
     ws = new WebSocket(wsUrl);
     ws.onopen = () => {
