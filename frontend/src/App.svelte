@@ -18,15 +18,11 @@
   let lobbyError = "";
 
   function connect() {
-    let wsUrl = "";
-    if (
-      window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1"
-    ) {
-      wsUrl = `wss://${window.location.hostname}:8080/ws`;
-    } else {
-      wsUrl = "wss://prisonerfencing-server.fumlig.com/ws";
-    }
+    const wsUrl =
+      window.location.protocol !== "https:"
+        ? `ws://${window.location.hostname}:8080/ws`
+        : "wss://prisonerfencing-server.fumlig.com/ws";
+
     ws = new WebSocket(wsUrl);
     ws.onopen = () => {
       connected = true;

@@ -11,15 +11,6 @@ RUN npm ci
 # Copy all frontend source files
 COPY frontend/ ./
 
-# Debug: Check what files are actually copied
-RUN echo "=== Checking project structure ===" && \
-    ls -la && \
-    echo "=== Checking src directory ===" && \
-    ls -la src/ && \
-    echo "=== Looking for CSS files ===" && \
-    find . -name "*.css" -type f
-
-
 # Build the frontend
 RUN npm run build
 

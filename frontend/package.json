@@ -15,7 +15,6 @@
     "svelte": "^5.35.5",
     "svelte-check": "^4.2.2",
     "typescript": "~5.8.3",
-    "vite": "^7.0.4",
-    "vite-plugin-mkcert": "^1.17.8"
+    "vite": "^7.0.4"
   }
 }
