@@ -14,10 +14,10 @@ type EventHandler func(event Event, c *Client) error
 const (
 	EventSendMessage = "send_message"
 	EventNewMessage  = "new_message"
-	EventCreateRoom  = "create_room"
 	EventListRooms   = "list_rooms"
 	EventJoinRoom    = "join_room"
 	EventLeaveRoom   = "leave_room"
+	EventInitClient  = "init_client"
 )
 
 type SendMessageEvent struct {
@@ -32,4 +32,16 @@ type NewMessageEvent struct {
 
 type JoinRoomEvent struct {
 	Room string `json:"room"`
+}
+
+type ListRoomEvent struct {
+	// No fields needed for this event
+}
+
+type ListRoomResponse struct {
+	Rooms []string `json:"rooms"`
+}
+
+type InitClientEvent struct {
+	PlayerId string `json:"playerId"`
 }

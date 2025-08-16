@@ -1,0 +1,230 @@
+package server
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type GameState struct {
+	Turn         int                    `json:"turn"`
+	MaxTurns     int                    `json:"maxTurns"`
+	LastAction   string                 `json:"lastAction"`
+	GameOver     bool                   `json:"gameOver"`
+	Winner       string                 `json:"winner"`
+	PlayerStates map[string]PlayerState `json:"playerStates"` // id -> state
+}
+
+type PlayerState struct {
+	Pos      int    `json:"pos"`
+	Energy   int    `json:"energy"`
+	Action   string `json:"action"`
+	Advanced bool   `json:"advanced"`
+	Ready    bool   `json:"ready"`  // Indicates if the player is ready for the next action
+	Player   int    `json:"player"` // 1 for you, 2 for opponent
+}
+
+var roomStates = make(map[string]*GameState)
+
+func GameActionHandler(event Event, c *Client) error {
+	fmt.Printf("GameActionHandler called for client %s\n", c.id)
+	var payload struct {
+		Room     string `json:"room"`
+		PlayerId string `json:"playerId"`
+		Action   string `json:"action"`
+	}
+	if err := json.Unmarshal(event.Payload, &payload); err != nil {
+		return fmt.Errorf("failed to unmarshal game action: %v", err)
+	}
+
+	gs, ok := roomStates[payload.Room]
+	if !ok {
+		gs = &GameState{
+			Turn:         1,
+			MaxTurns:     20,
+			PlayerStates: make(map[string]PlayerState),
+		}
+		roomStates[payload.Room] = gs
+	}
+
+	// Set PlayerId on client for later use
+	//c.id = payload.PlayerId
+
+	// Set or update player state
+	if _, exists := gs.PlayerStates[c.id]; !exists {
+		pos := 2
+		if len(gs.PlayerStates) == 0 {
+			pos = 2
+		} else {
+			pos = 4
+		}
+		gs.PlayerStates[c.id] = PlayerState{Pos: pos, Energy: 10, Action: payload.Action, Advanced: false, Player: len(gs.PlayerStates) + 1}
+	} else {
+		ps := gs.PlayerStates[c.id]
+		ps.Action = payload.Action
+		gs.PlayerStates[c.id] = ps
+	}
+
+	ps := gs.PlayerStates[c.id]
+	ps.Ready = true // Mark player as ready for the next action
+	gs.PlayerStates[c.id] = ps
+	// Get both player ids
+	var ids []string
+	var countReady int
+	for pid := range gs.PlayerStates {
+		ids = append(ids, pid)
+		if gs.PlayerStates[pid].Ready {
+			countReady++
+		}
+	}
+
+	fmt.Println(len(gs.PlayerStates), "players and ready", countReady)
+	// Check if both players have made their actions
+	if len(gs.PlayerStates) < 2 || countReady < 2 {
+		// Not enough players, wait for the opponent
+		emit(Event{
+			Type:    "WAITING_FOR_OPPONENT",
+			Payload: json.RawMessage(fmt.Sprintf(`{"waitingForOpponent": true, "room": "%s"}`, payload.Room)),
+		}, c)
+		return nil
+	}
+
+	if len(ids) != 2 {
+		fmt.Printf("expected 2 players, got %d", len(ids))
+		fmt.Printf("ids: %+v\n", ids)
+		return nil
+	}
+	// Game logic
+	p1 := gs.PlayerStates[ids[0]]
+	p2 := gs.PlayerStates[ids[1]]
+
+	// For player 2, invert movement direction
+	var log1, log2 string
+	p1.Pos, p1.Energy, log1 = resolveAction(p1.Action, p1.Pos, p1.Energy, p2.Pos, p2.Energy, &p1.Advanced, false)
+	p2.Pos, p2.Energy, log2 = resolveAction(p2.Action, p2.Pos, p2.Energy, p1.Pos, p1.Energy, &p2.Advanced, true)
+
+	// ATTACK and COUNTER logic
+	lastAction := ""
+	if p1.Action == "ATTACK" {
+		dmg := 3
+		if p1.Advanced {
+			dmg = 6
+		}
+		if p2.Action == "COUNTER" {
+			p1.Energy -= dmg
+			lastAction = "Player 2 countered! Player 1 takes damage."
+		} else {
+			p2.Energy -= dmg
+			lastAction = "Player 1 attacked for damage."
+		}
+	}
+	if p2.Action == "ATTACK" {
+		dmg := 3
+		if p2.Advanced {
+			dmg = 6
+		}
+		if p1.Action == "COUNTER" {
+			p2.Energy -= dmg
+			lastAction = "Player 1 countered! Player 2 takes damage."
+		} else {
+			p1.Energy -= dmg
+			lastAction = "Player 2 attacked for damage."
+		}
+	}
+	if p1.Action == "COUNTER" && p2.Action != "ATTACK" {
+		p1.Energy -= 2
+		lastAction = "Player 1 countered nothing. -2 Energy."
+	}
+	if p2.Action == "COUNTER" && p1.Action != "ATTACK" {
+		p2.Energy -= 2
+		lastAction = "Player 2 countered nothing. -2 Energy."
+	}
+
+	p1.Ready = false
+	p2.Ready = false
+
+	// Update game state for next round
+	gs.PlayerStates[ids[0]] = p1
+	gs.PlayerStates[ids[1]] = p2
+	gs.Turn++
+	gs.LastAction = fmt.Sprintf("P1: %s, P2: %s. %s", log1, log2, lastAction)
+
+	// Win conditions
+	gameOver := false
+	winner := ""
+	if p1.Energy <= 0 {
+		gameOver = true
+		winner = "Opponent wins!"
+	} else if p2.Energy <= 0 {
+		gameOver = true
+		winner = "You win!"
+	} else if gs.Turn > gs.MaxTurns {
+		gameOver = true
+		if p1.Energy > p2.Energy {
+			winner = "You win by energy!"
+		} else if p1.Energy < p2.Energy {
+			winner = "Opponent wins by energy!"
+		} else {
+			winner = "Draw!"
+		}
+	}
+	gs.GameOver = gameOver
+	gs.Winner = winner
+
+	fmt.Printf("Game state updated: %+v\n", gs)
+
+	fmt.Printf("lastAction: %+v\n", lastAction)
+
+	// Send personalized state to each client
+	for client := range c.hub.client {
+		if client.room == payload.Room {
+			// Assign 'you' and 'opponent' based on client.id
+			var youState, opponentState PlayerState
+			for pid, state := range gs.PlayerStates {
+				if pid == client.id {
+					youState = state
+				} else {
+					opponentState = state
+				}
+			}
+			personalized := *gs
+			personalized.PlayerStates = map[string]PlayerState{
+				"you":      youState,
+				"opponent": opponentState,
+			}
+			data, _ := json.Marshal(personalized)
+			outgoing := Event{
+				Type:    "GAME_ACTION_RESULT",
+				Payload: data,
+			}
+			emit(outgoing, client)
+		}
+	}
+	return nil
+}
+
+// Helper to resolve actions
+func resolveAction(action string, pos int, energy int, otherPos int, otherEnergy int, advancedAttackNext *bool, invert bool) (int, int, string) {
+	log := ""
+	switch action {
+	case "WAIT":
+		energy++
+		log = "WAIT: +1 Energy"
+	case "RETREAT":
+		if invert {
+			pos = min(6, pos+1)
+		} else {
+			pos = max(0, pos-1)
+		}
+		energy--
+		log = "RETREAT: -1 Energy"
+	case "ADVANCE":
+		if invert {
+			pos = max(0, pos-1)
+		} else {
+			pos = min(6, pos+1)
+		}
+		*advancedAttackNext = true
+		log = "ADVANCE: Double attack next turn"
+	}
+	return pos, energy, log
+}

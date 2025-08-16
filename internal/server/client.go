@@ -14,6 +14,7 @@ type Client struct {
 	connection *websocket.Conn
 	hub        *Hub
 	room       string // The room the client is currently in
+	id         string // Unique player identifier
 	// egress is used to avoid concurrent writes to the websocket connection.
 	egress chan Event
 }
@@ -45,6 +46,16 @@ func NewClient(conn *websocket.Conn, hub *Hub) *Client {
 		egress:     make(chan Event),
 	}
 }
+
+// generateRandomID returns a random string to be used as a client ID.
+// func generateRandomID(length int) string {
+// 	charset := "abcdefghijklmnopqrstuvwxyz"
+// 	b := make([]byte, length)
+// 	for i := range b {
+// 		b[i] = charset[rand.Intn(len(charset))]
+// 	}
+// 	return string(b)
+// }
 
 func (c *Client) readMessages() {
 	defer c.hub.removeClient(c)

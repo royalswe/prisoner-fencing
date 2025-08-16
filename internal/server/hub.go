@@ -18,11 +18,68 @@ type Hub struct {
 }
 
 func (h *Hub) setupEventHandlers() {
+
 	h.handlers[EventSendMessage] = SendMessage
 	h.handlers[EventJoinRoom] = JoinRoomHandler
-	h.handlers[EventCreateRoom] = SendMessage
 	h.handlers[EventLeaveRoom] = SendMessage
-	h.handlers[EventListRooms] = SendMessage
+	h.handlers[EventListRooms] = ListRoomHandler
+	h.handlers[EventInitClient] = InitClientHandler
+	h.handlers["game_action"] = GameActionHandler
+}
+
+func InitClientHandler(event Event, c *Client) error {
+	var initEvent InitClientEvent
+	if err := json.Unmarshal(event.Payload, &initEvent); err != nil {
+		return fmt.Errorf("failed to unmarshal init client event: %v", err)
+	}
+	c.id = initEvent.PlayerId
+
+	// Notify the client of their player ID
+	emit(Event{
+		Type:    EventInitClient,
+		Payload: json.RawMessage(fmt.Sprintf(`{"playerId": "%s"}`, c.id)),
+	}, c)
+
+	log.Printf("Client initialized with Player ID: %s", c.id)
+	return nil
+}
+
+func ListRoomHandler(event Event, c *Client) error {
+	// var listRoomEvent ListRoomEvent
+	// if err := json.Unmarshal(event.Payload, &listRoomEvent); err != nil {
+	// 	return fmt.Errorf("failed to unmarshal list room event: %v", err)
+	// }
+
+	var rooms []string
+	for client := range c.hub.client {
+		if client.room != "" && !contains(rooms, client.room) {
+			rooms = append(rooms, client.room)
+		}
+	}
+	fmt.Printf("Available rooms: %v\n", rooms)
+	response := ListRoomResponse{Rooms: rooms}
+	data, err := json.Marshal(response)
+	if err != nil {
+		return fmt.Errorf("failed to marshal list room response: %v", err)
+	}
+
+	outgoingEvent := Event{
+		Type:    EventListRooms,
+		Payload: data,
+	}
+	broadcast(outgoingEvent, c.hub)
+
+	return nil
+}
+
+// contains checks if a slice of strings contains a specific string.
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
 }
 
 func JoinRoomHandler(event Event, c *Client) error {
@@ -31,6 +88,13 @@ func JoinRoomHandler(event Event, c *Client) error {
 		return fmt.Errorf("failed to unmarshal join room event: %v", err)
 	}
 	c.room = joinRoomEvent.Room
+
+	emit(Event{
+		Type:    EventJoinRoom,
+		Payload: json.RawMessage(fmt.Sprintf(`{"room": "%s"}`, joinRoomEvent.Room)),
+	}, c)
+	// get list of rooms
+	ListRoomHandler(Event{Type: EventListRooms}, c)
 	return nil
 }
 
@@ -55,11 +119,7 @@ func SendMessage(event Event, c *Client) error {
 		Type:    EventNewMessage,
 		Payload: data,
 	}
-	for client := range c.hub.client {
-		if client.room == c.room {
-			client.egress <- outgoingEvent
-		}
-	}
+	roomEmit(outgoingEvent, c.room, c.hub)
 
 	return nil
 }
@@ -113,5 +173,26 @@ func (h *Hub) removeClient(client *Client) {
 	if _, ok := h.client[client]; ok {
 		client.connection.Close(websocket.StatusNormalClosure, "Connection closed normally")
 		delete(h.client, client)
+	}
+}
+
+// Send an event to a single client
+func emit(event Event, client *Client) {
+	client.egress <- event
+}
+
+// Send an event to all connected clients
+func broadcast(event Event, h *Hub) {
+	for client := range h.client {
+		client.egress <- event
+	}
+}
+
+// Send an event to all clients in the same room
+func roomEmit(event Event, room string, h *Hub) {
+	for client := range h.client {
+		if client.room == room {
+			client.egress <- event
+		}
 	}
 }
