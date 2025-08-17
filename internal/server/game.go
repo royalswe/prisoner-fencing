@@ -19,14 +19,13 @@ type PlayerState struct {
 	Energy   int    `json:"energy"`
 	Action   string `json:"action"`
 	Advanced bool   `json:"advanced"`
-	Ready    bool   `json:"ready"`  // Indicates if the player is ready for the next action
 	Player   int    `json:"player"` // 1 for you, 2 for opponent
 }
 
 var roomStates = make(map[string]*GameState)
 
 func GameActionHandler(event Event, c *Client) error {
-	fmt.Printf("GameActionHandler called for client %s\n", c.id)
+
 	var payload struct {
 		Room     string `json:"room"`
 		PlayerId string `json:"playerId"`
@@ -46,15 +45,10 @@ func GameActionHandler(event Event, c *Client) error {
 		roomStates[payload.Room] = gs
 	}
 
-	// Set PlayerId on client for later use
-	//c.id = payload.PlayerId
-
 	// Set or update player state
 	if _, exists := gs.PlayerStates[c.id]; !exists {
 		pos := 2
-		if len(gs.PlayerStates) == 0 {
-			pos = 2
-		} else {
+		if len(gs.PlayerStates) > 0 {
 			pos = 4
 		}
 		gs.PlayerStates[c.id] = PlayerState{Pos: pos, Energy: 10, Action: payload.Action, Advanced: false, Player: len(gs.PlayerStates) + 1}
@@ -64,29 +58,12 @@ func GameActionHandler(event Event, c *Client) error {
 		gs.PlayerStates[c.id] = ps
 	}
 
-	ps := gs.PlayerStates[c.id]
-	ps.Ready = true // Mark player as ready for the next action
-	gs.PlayerStates[c.id] = ps
 	// Get both player ids
 	var ids []string
-	var countReady int
 	for pid := range gs.PlayerStates {
 		ids = append(ids, pid)
-		if gs.PlayerStates[pid].Ready {
-			countReady++
-		}
 	}
-
-	fmt.Println(len(gs.PlayerStates), "players and ready", countReady)
-	// Check if both players have made their actions
-	if len(gs.PlayerStates) < 2 || countReady < 2 {
-		// Not enough players, wait for the opponent
-		emit(Event{
-			Type:    "WAITING_FOR_OPPONENT",
-			Payload: json.RawMessage(fmt.Sprintf(`{"waitingForOpponent": true, "room": "%s"}`, payload.Room)),
-		}, c)
-		return nil
-	}
+	fmt.Print(ids)
 
 	if len(ids) != 2 {
 		fmt.Printf("expected 2 players, got %d", len(ids))
@@ -96,6 +73,16 @@ func GameActionHandler(event Event, c *Client) error {
 	// Game logic
 	p1 := gs.PlayerStates[ids[0]]
 	p2 := gs.PlayerStates[ids[1]]
+
+	// Check if both players have made their actions
+	if p1.Action == "" || p2.Action == "" {
+		// Not enough players, wait for the opponent
+		emit(Event{
+			Type:    "WAITING_FOR_OPPONENT",
+			Payload: json.RawMessage(fmt.Sprintf(`{"waitingForOpponent": true, "room": "%s"}`, payload.Room)),
+		}, c)
+		return nil
+	}
 
 	// For player 2, invert movement direction
 	var log1, log2 string
@@ -130,6 +117,13 @@ func GameActionHandler(event Event, c *Client) error {
 			lastAction = "Player 2 attacked for damage."
 		}
 	}
+	// Reset advanced attack flag
+	if p1.Action != "ADVANCE" {
+		p1.Advanced = false
+	}
+	if p2.Action != "ADVANCE" {
+		p2.Advanced = false
+	}
 	if p1.Action == "COUNTER" && p2.Action != "ATTACK" {
 		p1.Energy -= 2
 		lastAction = "Player 1 countered nothing. -2 Energy."
@@ -138,9 +132,6 @@ func GameActionHandler(event Event, c *Client) error {
 		p2.Energy -= 2
 		lastAction = "Player 2 countered nothing. -2 Energy."
 	}
-
-	p1.Ready = false
-	p2.Ready = false
 
 	// Update game state for next round
 	gs.PlayerStates[ids[0]] = p1
@@ -170,10 +161,6 @@ func GameActionHandler(event Event, c *Client) error {
 	gs.GameOver = gameOver
 	gs.Winner = winner
 
-	fmt.Printf("Game state updated: %+v\n", gs)
-
-	fmt.Printf("lastAction: %+v\n", lastAction)
-
 	// Send personalized state to each client
 	for client := range c.hub.client {
 		if client.room == payload.Room {
@@ -199,6 +186,11 @@ func GameActionHandler(event Event, c *Client) error {
 			emit(outgoing, client)
 		}
 	}
+
+	p1.Action = ""
+	p2.Action = ""
+	gs.PlayerStates[ids[0]] = p1
+	gs.PlayerStates[ids[1]] = p2
 	return nil
 }
 

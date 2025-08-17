@@ -10,14 +10,12 @@
 
   // Board icons for actions
   const actionIcons: Record<string, string> = {
-    WAIT: "⏸️",
-    RETREAT: "⬅️",
-    ADVANCE: "➡️",
-    ATTACK: "⚔️",
-    COUNTER: "🛡️",
-    DEFAULT: "👤",
-    PLAYER: "🟥",
-    OPPONENT: "🟦",
+    WAIT: "/img/wait.png",
+    RETREAT: "/img/retreat.png",
+    ADVANCE: "/img/advance.png",
+    ATTACK: "/img/knife.png",
+    COUNTER: "/img/counter.png",
+    DEFAULT: "/img/default.png",
   };
 
   // Actions
@@ -35,10 +33,6 @@
 
   // Send action to server
   function handleAction(key: string) {
-    console.log(
-      `Handling action: ${key} for player ${PLAYER_ID} in room ${room}`
-    );
-
     if (gs.gameOver) return;
     send("game_action", { room, playerId: PLAYER_ID, action: key });
   }
@@ -65,7 +59,7 @@
   >
     {#each getBoardActions() as val, i}
       <div
-        style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 2em; border: 2px solid #ccc; border-radius: 8px;position: relative;
+        style="width: 48px; height: 48px;  border: 2px solid #ccc; border-radius: 8px;position: relative;
         background: {val === 'PLAYER'
           ? 'red'
           : val === 'OPPONENT'
@@ -73,25 +67,24 @@
             : '#f8f8f8'};"
       >
         {#if val === "PLAYER"}
-          <span style="border-color: red;"
-            >{actionIcons[gs.you.action] || actionIcons.DEFAULT}</span
-          >
+          <span style="border-color: red;">
+            <img
+              src={actionIcons[gs.you.action] || actionIcons.DEFAULT}
+              alt={gs.you.action}
+              style="width: 100%; height: 100%;"
+            />
+          </span>
         {:else if val === "OPPONENT"}
-          {#if gs.opponent.action == "RETREAT"}
-            <span style="border-color: blue;"
-              >{actionIcons["ADVANCE"] || actionIcons.DEFAULT}</span
-            >
-          {:else if gs.opponent.action == "ADVANCE"}
-            <span style="border-color: blue;"
-              >{actionIcons["RETREAT"] || actionIcons.DEFAULT}</span
-            >
-          {:else}
-            <span style="border-color: blue;"
-              >{actionIcons[gs.opponent.action] || actionIcons.DEFAULT}</span
-            >
-          {/if}
+          <span style="border-color: blue;">
+            <img
+              src={actionIcons[gs.opponent.action] || actionIcons.DEFAULT}
+              alt={gs.opponent.action}
+              style="width: 100%; height: 100%;  -webkit-transform: scaleX(-1);
+  transform: scaleX(-1);"
+            />
+          </span>
         {:else}
-          <span>{actionIcons.DEFAULT}</span>
+          <span></span>
         {/if}
       </div>
     {/each}
@@ -115,7 +108,11 @@
     <div style="display: flex; gap: 1em; flex-wrap: wrap;">
       {#each actions as act}
         <button disabled={gs.gameOver} onclick={() => handleAction(act.name)}>
-          {actionIcons[act.name] || actionIcons.DEFAULT}
+          <img
+            src={actionIcons[act.name] || actionIcons.DEFAULT}
+            alt={act.name}
+            style="width: 24px; height: 24px; vertical-align: middle;"
+          />
           {act.name} ({act.key})<br /><small>{act.desc}</small>
         </button>
       {/each}
