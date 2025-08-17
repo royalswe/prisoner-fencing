@@ -54,33 +54,29 @@
 
 <main>
   last actions:{gs.lastAction}
-  <div
-    style="display: flex; justify-content: center; margin: 1em 0; gap: 0.5em;"
-  >
+  <div class="board-row">
     {#each getBoardActions() as val, i}
       <div
-        style="width: 48px; height: 48px;  border: 2px solid #ccc; border-radius: 8px;position: relative;
-        background: {val === 'PLAYER'
-          ? 'red'
+        class="board-cell {val === 'PLAYER'
+          ? 'player-cell'
           : val === 'OPPONENT'
-            ? 'blue'
-            : '#f8f8f8'};"
+            ? 'opponent-cell'
+            : ''}"
       >
         {#if val === "PLAYER"}
-          <span style="border-color: red;">
+          <span class="player-icon">
             <img
               src={actionIcons[gs.you.action] || actionIcons.DEFAULT}
               alt={gs.you.action}
-              style="width: 100%; height: 100%;"
+              class="action-img"
             />
           </span>
         {:else if val === "OPPONENT"}
-          <span style="border-color: blue;">
+          <span class="opponent-icon">
             <img
               src={actionIcons[gs.opponent.action] || actionIcons.DEFAULT}
               alt={gs.opponent.action}
-              style="width: 100%; height: 100%;  -webkit-transform: scaleX(-1);
-  transform: scaleX(-1);"
+              class="action-img opponent-img"
             />
           </span>
         {:else}
@@ -91,7 +87,7 @@
   </div>
   <h2>Prisoner's Fencing - Room: {room}</h2>
   <div>Turn: {gs.turn} / {gs.maxTurns}</div>
-  <div style="display: flex; gap: 2em; margin: 1em 0;">
+  <div class="player-info-row">
     <div>
       <strong>You</strong><br />
       Energy: {gs.you.energy}<br />
@@ -103,15 +99,15 @@
       Position: {gs.you.player === 2 ? 6 - gs.opponent.pos : gs.opponent.pos}
     </div>
   </div>
-  <div style="margin-bottom: 1em;">
+  <div class="actions-section">
     <strong>Actions:</strong>
-    <div style="display: flex; gap: 1em; flex-wrap: wrap;">
+    <div class="actions-row">
       {#each actions as act}
         <button disabled={gs.gameOver} onclick={() => handleAction(act.name)}>
           <img
             src={actionIcons[act.name] || actionIcons.DEFAULT}
             alt={act.name}
-            style="width: 24px; height: 24px; vertical-align: middle;"
+            class="action-btn-img"
           />
           {act.name} ({act.key})<br /><small>{act.desc}</small>
         </button>
@@ -129,3 +125,59 @@
     <div style="font-size: 1.5em; color: darkred;">{gs.winner}</div>
   {/if}
 </main>
+
+<style>
+  .board-row {
+    display: flex;
+    justify-content: center;
+    margin: 1em 0;
+    gap: 0.5em;
+  }
+  .board-cell {
+    width: 48px;
+    height: 48px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    position: relative;
+    background: #f8f8f8;
+  }
+  .player-cell {
+    background: red;
+  }
+  .opponent-cell {
+    background: blue;
+  }
+  .player-icon {
+    border-color: red;
+  }
+  .opponent-icon {
+    border-color: blue;
+  }
+  .action-img {
+    width: 100%;
+    height: 100%;
+  }
+  .opponent-img {
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
+  }
+  .player-info-row {
+    display: flex;
+    gap: 2em;
+    margin: 1em 0;
+  }
+  .actions-section {
+    margin-bottom: 1em;
+  }
+  .actions-row {
+    display: flex;
+    gap: 1em;
+    flex-wrap: wrap;
+  }
+  .action-btn-img {
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+    margin-bottom: 0.2em;
+  }
+</style>

@@ -86,52 +86,11 @@ func GameActionHandler(event Event, c *Client) error {
 
 	// For player 2, invert movement direction
 	var log1, log2 string
-	p1.Pos, p1.Energy, log1 = resolveAction(p1.Action, p1.Pos, p1.Energy, p2.Pos, p2.Energy, &p1.Advanced, false)
-	p2.Pos, p2.Energy, log2 = resolveAction(p2.Action, p2.Pos, p2.Energy, p1.Pos, p1.Energy, &p2.Advanced, true)
+	p1.Pos, p1.Energy, log1 = p1.resolveAction(&p2, false)
+	p2.Pos, p2.Energy, log2 = p2.resolveAction(&p1, true)
 
 	// ATTACK and COUNTER logic
 	lastAction := ""
-	if p1.Action == "ATTACK" {
-		dmg := 3
-		if p1.Advanced {
-			dmg = 6
-		}
-		if p2.Action == "COUNTER" {
-			p1.Energy -= dmg
-			lastAction = "Player 2 countered! Player 1 takes damage."
-		} else {
-			p2.Energy -= dmg
-			lastAction = "Player 1 attacked for damage."
-		}
-	}
-	if p2.Action == "ATTACK" {
-		dmg := 3
-		if p2.Advanced {
-			dmg = 6
-		}
-		if p1.Action == "COUNTER" {
-			p2.Energy -= dmg
-			lastAction = "Player 1 countered! Player 2 takes damage."
-		} else {
-			p1.Energy -= dmg
-			lastAction = "Player 2 attacked for damage."
-		}
-	}
-	// Reset advanced attack flag
-	if p1.Action != "ADVANCE" {
-		p1.Advanced = false
-	}
-	if p2.Action != "ADVANCE" {
-		p2.Advanced = false
-	}
-	if p1.Action == "COUNTER" && p2.Action != "ATTACK" {
-		p1.Energy -= 2
-		lastAction = "Player 1 countered nothing. -2 Energy."
-	}
-	if p2.Action == "COUNTER" && p1.Action != "ATTACK" {
-		p2.Energy -= 2
-		lastAction = "Player 2 countered nothing. -2 Energy."
-	}
 
 	// Update game state for next round
 	gs.PlayerStates[ids[0]] = p1
@@ -195,28 +154,56 @@ func GameActionHandler(event Event, c *Client) error {
 }
 
 // Helper to resolve actions
-func resolveAction(action string, pos int, energy int, otherPos int, otherEnergy int, advancedAttackNext *bool, invert bool) (int, int, string) {
+func (p1 *PlayerState) resolveAction(p2 *PlayerState, invert bool) (int, int, string) {
 	log := ""
-	switch action {
+	switch p1.Action {
 	case "WAIT":
-		energy++
+		p1.Energy++
 		log = "WAIT: +1 Energy"
 	case "RETREAT":
 		if invert {
-			pos = min(6, pos+1)
+			p1.Pos = min(6, p1.Pos+1)
 		} else {
-			pos = max(0, pos-1)
+			p1.Pos = max(0, p1.Pos-1)
 		}
-		energy--
+		p1.Energy--
 		log = "RETREAT: -1 Energy"
 	case "ADVANCE":
 		if invert {
-			pos = max(0, pos-1)
+			p1.Pos = max(0, p1.Pos-1)
+			if p1.Pos <= p2.Pos {
+				// can not advance through or same position as opponent
+				p1.Pos = max(0, p1.Pos+1)
+			}
 		} else {
-			pos = min(6, pos+1)
+			p1.Pos = min(6, p1.Pos+1)
+			if p1.Pos >= p2.Pos {
+				p1.Pos = min(6, p1.Pos-1)
+			}
 		}
-		*advancedAttackNext = true
+		p1.Energy--
+		p1.Advanced = true
 		log = "ADVANCE: Double attack next turn"
+	case "ATTACK":
+		dmg := 3
+		if p1.Advanced {
+			dmg = 6
+		}
+		if p2.Action == "COUNTER" {
+			p1.Energy -= dmg
+			log = fmt.Sprintf("Opponent countered! takes %d damage.", dmg)
+		} else {
+			p2.Energy -= dmg
+			log = fmt.Sprintf("Attacked for %d damage.", dmg)
+		}
+	case "COUNTER":
+		if p2.Action != "ATTACK" {
+			p1.Energy -= 2
+			log = "Countered nothing. -2 Energy."
+		}
 	}
-	return pos, energy, log
+	if p1.Action != "ADVANCE" {
+		p1.Advanced = false
+	}
+	return p1.Pos, p1.Energy, log
 }
