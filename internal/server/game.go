@@ -98,32 +98,7 @@ func GameActionHandler(event Event, c *Client) error {
 	gs.Turn++
 	gs.LastAction = fmt.Sprintf("P1: %s %s| P2: %s %s.", movementLog1, combatLog1, movementLog2, combatLog2)
 
-	// Win conditions
-	gameOver := false
-	winner := ""
-	if p1.Energy <= 0 && p2.Energy <= 0 {
-		gameOver = true
-		winner = "Draw!"
-	} else if p1.Energy <= 0 {
-		gameOver = true
-		winner = "Opponent wins!"
-	} else if p2.Energy <= 0 {
-		gameOver = true
-		winner = "You win!"
-	} else if gs.Turn > gs.MaxTurns {
-		gameOver = true
-		if p1.Energy > p2.Energy {
-			winner = "You win by energy!"
-		} else if p1.Energy < p2.Energy {
-			winner = "Opponent wins by energy!"
-		} else {
-			winner = "Draw!"
-		}
-	}
-	gs.GameOver = gameOver
-	gs.Winner = winner
-
-	// Send personalized state to each client
+	// Send personalized state and winner to each client
 	for client := range c.hub.client {
 		if client.room == payload.Room {
 			// Assign 'you' and 'opponent' based on client.id
@@ -140,6 +115,28 @@ func GameActionHandler(event Event, c *Client) error {
 				"you":      youState,
 				"opponent": opponentState,
 			}
+			// Set personalized winner message
+			if youState.Energy > 0 && opponentState.Energy <= 0 {
+				personalized.Winner = "You win!"
+			} else if youState.Energy <= 0 && opponentState.Energy > 0 {
+				personalized.Winner = "Opponent wins!"
+			} else if youState.Energy <= 0 && opponentState.Energy <= 0 {
+				personalized.Winner = "Draw!"
+			} else if gs.Turn > gs.MaxTurns {
+				if youState.Energy > opponentState.Energy {
+					personalized.Winner = "You win by energy!"
+				} else if youState.Energy < opponentState.Energy {
+					personalized.Winner = "Opponent wins by energy!"
+				} else {
+					personalized.Winner = "Draw!"
+				}
+			}
+
+			// If there is a winner, set personalized.GameOver to true
+			if personalized.Winner != "" {
+				personalized.GameOver = true
+			}
+
 			data, _ := json.Marshal(personalized)
 			outgoing := Event{
 				Type:    "GAME_ACTION_RESULT",
