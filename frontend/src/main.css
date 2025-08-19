@@ -5,7 +5,7 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color: #181a1b;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -35,10 +35,6 @@ h1 {
   line-height: 1.1;
 }
 
-.card {
-  padding: 2em;
-}
-
 #app {
   max-width: 1280px;
   margin: 0 auto;
@@ -62,18 +58,18 @@ button:hover {
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 4px auto #646cff;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.player-cell {
+  background: red !important;
+  border: 2px solid darkred;
+}
+.opponent-cell {
+  background: blue !important;
+  border: 2px solid darkblue;
+}
+
+.js-highlight {
+  outline: 2px solid yellow !important;
 }

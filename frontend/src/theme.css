@@ -1,0 +1,18 @@
+/* Basic CSS variables for light and dark mode */
+:root[data-theme="light"] {
+  --bg: #fff;
+  --fg: #222;
+  --toggle-bg: #eee;
+  --toggle-fg: #222;
+}
+:root[data-theme="dark"] {
+  --bg: #222;
+  --fg: #eee;
+  --toggle-bg: #333;
+  --toggle-fg: #eee;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  transition: background 0.2s, color 0.2s;
+}

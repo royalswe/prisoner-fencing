@@ -7,7 +7,6 @@ const gs = gameState();
 export function gameMessageHandler(msg: any) {
     console.log('Received game message:', msg);
     const payload = msg.payload;
-    gs.lastAction = payload.lastAction;
 
     switch (msg.type) {
         case EVENT.error:
@@ -23,7 +22,7 @@ export function gameMessageHandler(msg: any) {
             gs.you = payload.playerStates.you || {};
             break;
         case 'WAITING_FOR_OPPONENT':
-            console.log(payload);
+            gs.lastAction = 'Waiting for opponent...';
             break;
         default:
             console.log('unknown emit from server', msg);

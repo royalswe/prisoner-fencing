@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount, onDestroy } from "svelte";
   import { send } from "../ws";
   import { gameState } from "../stores/gameState.svelte";
   import { PLAYER_ID } from "../constants/player";
@@ -31,9 +32,37 @@
     },
   ];
 
+  onMount(() => {
+    window.addEventListener("keydown", handleKeydown);
+  });
+  onDestroy(() => {
+    window.removeEventListener("keydown", handleKeydown);
+  });
+
+  function handleKeydown(event: KeyboardEvent) {
+    const action = actions.find((a) => a.key === event.key)?.name;
+    if (action) {
+      handleAction(action);
+      event.preventDefault();
+    }
+  }
+
   // Send action to server
   function handleAction(key: string) {
     if (gs.gameOver) return;
+    const action = actions.find((a) => a.name === key);
+    if (!action) return;
+    // Remove highlight from all buttons
+    const buttons = document.querySelectorAll("button[aria-label]");
+    buttons.forEach((btn) => btn.classList.remove("js-highlight"));
+    // Highlight selected action
+    const button = document.querySelector(
+      `button[aria-label="${action.name}"]`
+    );
+
+    if (button) {
+      button.classList.add("js-highlight");
+    }
     send("game_action", { room, playerId: PLAYER_ID, action: key });
   }
 
@@ -52,79 +81,76 @@
   }
 </script>
 
-<main>
-  last actions:{gs.lastAction}
-  <div class="board-row">
-    {#each getBoardActions() as val, i}
-      <div
-        class="board-cell {val === 'PLAYER'
-          ? 'player-cell'
-          : val === 'OPPONENT'
-            ? 'opponent-cell'
-            : ''}"
+<h2>Prisoner's Fencing - Room: {room}</h2>
+{#if gs.gameOver}
+  <p style="font-size: 1.5em; color: #23cb00; font-weight: 700;">
+    {gs.winner}
+  </p>
+{/if}
+{gs.lastAction || "Choose an action!"}
+<div class="board-row">
+  {#each getBoardActions() as val}
+    <div
+      class="board-cell {val === 'PLAYER'
+        ? 'player-cell'
+        : val === 'OPPONENT'
+          ? 'opponent-cell'
+          : ''}"
+    >
+      {#if val === "PLAYER"}
+        <span>
+          <img
+            src={actionIcons[gs.you.action] || actionIcons.DEFAULT}
+            alt={gs.you.action}
+            class="action-img"
+          />
+        </span>
+      {:else if val === "OPPONENT"}
+        <span>
+          <img
+            src={actionIcons[gs.opponent.action] || actionIcons.DEFAULT}
+            alt={gs.opponent.action}
+            class="action-img"
+          />
+        </span>
+      {:else}
+        <span></span>
+      {/if}
+    </div>
+  {/each}
+</div>
+<div>Turn: {gs.turn} / {gs.maxTurns}</div>
+<div class="player-info-row">
+  <div>
+    <strong>You</strong><br />
+    Energy: {gs.you.energy}<br />
+    Position: {gs.you.player === 2 ? 6 - gs.you.pos : gs.you.pos}
+  </div>
+  <div>
+    <strong>Opponent</strong><br />
+    Energy: {gs.opponent.energy}<br />
+    Position: {gs.you.player === 2 ? 6 - gs.opponent.pos : gs.opponent.pos}
+  </div>
+</div>
+<div class="actions-section">
+  <strong>Actions:</strong>
+  <div class="actions-row">
+    {#each actions as act}
+      <button
+        aria-label={act.name}
+        disabled={gs.gameOver}
+        onclick={() => handleAction(act.name)}
       >
-        {#if val === "PLAYER"}
-          <span class="player-icon">
-            <img
-              src={actionIcons[gs.you.action] || actionIcons.DEFAULT}
-              alt={gs.you.action}
-              class="action-img"
-            />
-          </span>
-        {:else if val === "OPPONENT"}
-          <span class="opponent-icon">
-            <img
-              src={actionIcons[gs.opponent.action] || actionIcons.DEFAULT}
-              alt={gs.opponent.action}
-              class="action-img opponent-img"
-            />
-          </span>
-        {:else}
-          <span></span>
-        {/if}
-      </div>
+        <img
+          src={actionIcons[act.name] || actionIcons.DEFAULT}
+          alt={act.name}
+          class="action-btn-img"
+        />
+        {act.name} ({act.key})<br /><small>{act.desc}</small>
+      </button>
     {/each}
   </div>
-  <h2>Prisoner's Fencing - Room: {room}</h2>
-  <div>Turn: {gs.turn} / {gs.maxTurns}</div>
-  <div class="player-info-row">
-    <div>
-      <strong>You</strong><br />
-      Energy: {gs.you.energy}<br />
-      Position: {gs.you.player === 2 ? 6 - gs.you.pos : gs.you.pos}
-    </div>
-    <div>
-      <strong>Opponent</strong><br />
-      Energy: {gs.opponent.energy}<br />
-      Position: {gs.you.player === 2 ? 6 - gs.opponent.pos : gs.opponent.pos}
-    </div>
-  </div>
-  <div class="actions-section">
-    <strong>Actions:</strong>
-    <div class="actions-row">
-      {#each actions as act}
-        <button disabled={gs.gameOver} onclick={() => handleAction(act.name)}>
-          <img
-            src={actionIcons[act.name] || actionIcons.DEFAULT}
-            alt={act.name}
-            class="action-btn-img"
-          />
-          {act.name} ({act.key})<br /><small>{act.desc}</small>
-        </button>
-      {/each}
-    </div>
-  </div>
-  <div style="margin: 1em 0; color: #444;">
-    {#if gs.lastAction}
-      {gs.lastAction}
-    {:else}
-      Waiting for opponent...
-    {/if}
-  </div>
-  {#if gs.gameOver}
-    <div style="font-size: 1.5em; color: darkred;">{gs.winner}</div>
-  {/if}
-</main>
+</div>
 
 <style>
   .board-row {
@@ -141,26 +167,12 @@
     position: relative;
     background: #f8f8f8;
   }
-  .player-cell {
-    background: red;
-  }
-  .opponent-cell {
-    background: blue;
-  }
-  .player-icon {
-    border-color: red;
-  }
-  .opponent-icon {
-    border-color: blue;
-  }
+
   .action-img {
     width: 100%;
     height: 100%;
   }
-  .opponent-img {
-    -webkit-transform: scaleX(-1);
-    transform: scaleX(-1);
-  }
+
   .player-info-row {
     display: flex;
     gap: 2em;

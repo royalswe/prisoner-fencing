@@ -78,30 +78,29 @@ func GameActionHandler(event Event, c *Client) error {
 	if p1.Action == "" || p2.Action == "" {
 		// Not enough players, wait for the opponent
 		emit(Event{
-			Type:    "WAITING_FOR_OPPONENT",
-			Payload: json.RawMessage(fmt.Sprintf(`{"waitingForOpponent": true, "room": "%s"}`, payload.Room)),
+			Type: "WAITING_FOR_OPPONENT",
 		}, c)
 		return nil
 	}
 
 	// For player 2, invert movement direction
 	var log1, log2 string
-	p1.Pos, p1.Energy, log1 = p1.resolveAction(&p2, false)
-	p2.Pos, p2.Energy, log2 = p2.resolveAction(&p1, true)
-
-	// ATTACK and COUNTER logic
-	lastAction := ""
+	p1.Pos, p1.Energy, log1 = p1.resolveAction(&p2)
+	p2.Pos, p2.Energy, log2 = p2.resolveAction(&p1)
 
 	// Update game state for next round
 	gs.PlayerStates[ids[0]] = p1
 	gs.PlayerStates[ids[1]] = p2
 	gs.Turn++
-	gs.LastAction = fmt.Sprintf("P1: %s, P2: %s. %s", log1, log2, lastAction)
+	gs.LastAction = fmt.Sprintf("P1: %s, P2: %s.", log1, log2)
 
 	// Win conditions
 	gameOver := false
 	winner := ""
-	if p1.Energy <= 0 {
+	if p1.Energy <= 0 && p2.Energy <= 0 {
+		gameOver = true
+		winner = "Draw!"
+	} else if p1.Energy <= 0 {
 		gameOver = true
 		winner = "Opponent wins!"
 	} else if p2.Energy <= 0 {
@@ -154,32 +153,36 @@ func GameActionHandler(event Event, c *Client) error {
 }
 
 // Helper to resolve actions
-func (p1 *PlayerState) resolveAction(p2 *PlayerState, invert bool) (int, int, string) {
+func (p1 *PlayerState) resolveAction(p2 *PlayerState) (int, int, string) {
 	log := ""
+
 	switch p1.Action {
 	case "WAIT":
 		p1.Energy++
 		log = "WAIT: +1 Energy"
 	case "RETREAT":
-		if invert {
-			p1.Pos = min(6, p1.Pos+1)
+		var newPos int
+		if p1.Player == 1 {
+			newPos = max(0, p1.Pos-1)
 		} else {
-			p1.Pos = max(0, p1.Pos-1)
+			newPos = min(6, p1.Pos+1)
+		}
+		// Prevent moving into or through opponent
+		if newPos != p2.Pos {
+			p1.Pos = newPos
 		}
 		p1.Energy--
 		log = "RETREAT: -1 Energy"
 	case "ADVANCE":
-		if invert {
-			p1.Pos = max(0, p1.Pos-1)
-			if p1.Pos <= p2.Pos {
-				// can not advance through or same position as opponent
-				p1.Pos = max(0, p1.Pos+1)
-			}
+		var newPos int
+		if p1.Player == 1 {
+			newPos = min(6, p1.Pos+1)
 		} else {
-			p1.Pos = min(6, p1.Pos+1)
-			if p1.Pos >= p2.Pos {
-				p1.Pos = min(6, p1.Pos-1)
-			}
+			newPos = max(0, p1.Pos-1)
+		}
+		// Prevent moving into or through opponent
+		if newPos != p2.Pos {
+			p1.Pos = newPos
 		}
 		p1.Energy--
 		p1.Advanced = true

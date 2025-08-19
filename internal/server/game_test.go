@@ -19,8 +19,8 @@ func TestAdvanceDoubleAttack(t *testing.T) {
 	p2 := gs.PlayerStates["p2"]
 	p1.Action = "ADVANCE"
 	p2.Action = "ADVANCE"
-	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2, false)
-	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1, true)
+	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
+	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1)
 	gs.PlayerStates["p1"] = p1
 	gs.PlayerStates["p2"] = p2
 
@@ -30,8 +30,8 @@ func TestAdvanceDoubleAttack(t *testing.T) {
 	// Next turn: p1 attacks, p2 waits
 	p1.Action = "ATTACK"
 	p2.Action = "WAIT"
-	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2, false)
-	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1, true)
+	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
+	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1)
 
 	// 10 -1 -6 +1 = 4
 	if p2.Energy != 4 {
@@ -53,8 +53,8 @@ func TestCounterReflect(t *testing.T) {
 
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
-	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2, false)
-	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1, true)
+	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
+	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1)
 
 	if p1.Energy != 7 {
 		t.Errorf("Expected p1 energy to be 7 after counter reflect, got %d", p1.Energy)
@@ -97,9 +97,9 @@ func TestWaitEnergy(t *testing.T) {
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
 
-	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2, false)
-	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1, true)
-	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2, false)
+	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
+	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1)
+	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
 
 	if p1.Energy != 12 {
 		t.Errorf("Expected p1 energy to be 12 after WAIT twice, got %d", p1.Energy)
@@ -121,8 +121,8 @@ func TestRetreatAdvanceEnergy(t *testing.T) {
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
 
-	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2, false)
-	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1, true)
+	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
+	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1)
 
 	if p1.Energy != 9 {
 		t.Errorf("Expected p1 energy to be 9 after RETREAT, got %d", p1.Energy)
