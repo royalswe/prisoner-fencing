@@ -5,14 +5,6 @@ import (
 	"fmt"
 )
 
-// abs returns the absolute value of an integer
-func abs(x int) int {
-	if x < 0 {
-		return -x
-	}
-	return x
-}
-
 type GameState struct {
 	Turn         int                    `json:"turn"`
 	MaxTurns     int                    `json:"maxTurns"`
@@ -91,16 +83,20 @@ func GameActionHandler(event Event, c *Client) error {
 		return nil
 	}
 
-	// For player 2, invert movement direction
-	var log1, log2 string
-	p1.Pos, p1.Energy, log1 = p1.resolveAction(&p2)
-	p2.Pos, p2.Energy, log2 = p2.resolveAction(&p1)
+	// First resolve movement for both players
+	var movementLog1, movementLog2 string
+	p1.Pos, p1.Energy, movementLog1 = p1.resolveMovement(&p2)
+	p2.Pos, p2.Energy, movementLog2 = p2.resolveMovement(&p1)
+	// Then resolve combat for both players
+	var combatLog1, combatLog2 string
+	p1.Energy, combatLog1 = p1.resolveCombat(&p2)
+	p2.Energy, combatLog2 = p2.resolveCombat(&p1)
 
 	// Update game state for next round
 	gs.PlayerStates[ids[0]] = p1
 	gs.PlayerStates[ids[1]] = p2
 	gs.Turn++
-	gs.LastAction = fmt.Sprintf("P1: %s, P2: %s.", log1, log2)
+	gs.LastAction = fmt.Sprintf("P1: %s %s| P2: %s %s.", movementLog1, combatLog1, movementLog2, combatLog2)
 
 	// Win conditions
 	gameOver := false
@@ -160,10 +156,9 @@ func GameActionHandler(event Event, c *Client) error {
 	return nil
 }
 
-// Helper to resolve actions
-func (p1 *PlayerState) resolveAction(p2 *PlayerState) (int, int, string) {
+// Movement actions: WAIT, RETREAT, ADVANCE
+func (p1 *PlayerState) resolveMovement(p2 *PlayerState) (int, int, string) {
 	log := ""
-
 	switch p1.Action {
 	case "WAIT":
 		p1.Energy++
@@ -175,7 +170,6 @@ func (p1 *PlayerState) resolveAction(p2 *PlayerState) (int, int, string) {
 		} else {
 			newPos = min(6, p1.Pos+1)
 		}
-		// Prevent moving into or through opponent
 		if newPos != p2.Pos {
 			p1.Pos = newPos
 		}
@@ -188,19 +182,27 @@ func (p1 *PlayerState) resolveAction(p2 *PlayerState) (int, int, string) {
 		} else {
 			newPos = max(0, p1.Pos-1)
 		}
-		// Prevent moving into or through opponent
 		if newPos != p2.Pos {
 			p1.Pos = newPos
 		}
 		p1.Energy--
 		p1.Advanced = true
 		log = "ADVANCE: Double attack next turn"
+	}
+	return p1.Pos, p1.Energy, log
+}
+
+// Combat actions: ATTACK, COUNTER
+func (p1 *PlayerState) resolveCombat(p2 *PlayerState) (int, string) {
+	log := ""
+	adjacent := abs(p1.Pos-p2.Pos) == 1
+
+	switch p1.Action {
 	case "ATTACK":
 		dmg := 3
 		if p1.Advanced {
 			dmg = 6
 		}
-		adjacent := abs(p1.Pos-p2.Pos) == 1
 		switch p2.Action {
 		case "COUNTER":
 			if adjacent {
@@ -223,16 +225,21 @@ func (p1 *PlayerState) resolveAction(p2 *PlayerState) (int, int, string) {
 			}
 		}
 	case "COUNTER":
-		adjacent := abs(p1.Pos-p2.Pos) == 1
 		if p2.Action != "ATTACK" || !adjacent {
 			p1.Energy -= 2
 			log = "Countered nothing. -2 Energy."
-		} else if p2.Action != "ATTACK" {
-			log = "Countered nothing, but not adjacent. No penalty."
 		}
 	}
 	if p1.Action != "ADVANCE" {
 		p1.Advanced = false
 	}
-	return p1.Pos, p1.Energy, log
+	return p1.Energy, log
+}
+
+// abs returns the absolute value of an integer
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
 }

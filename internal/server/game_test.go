@@ -5,7 +5,6 @@ import (
 )
 
 func TestAdvanceDoubleAttack(t *testing.T) {
-	// Setup initial state
 	gs := &GameState{
 		Turn:         1,
 		MaxTurns:     20,
@@ -14,13 +13,14 @@ func TestAdvanceDoubleAttack(t *testing.T) {
 	gs.PlayerStates["p1"] = PlayerState{Pos: 2, Energy: 10, Action: "ADVANCE", Advanced: false, Player: 1}
 	gs.PlayerStates["p2"] = PlayerState{Pos: 4, Energy: 10, Action: "WAIT", Advanced: false, Player: 2}
 
-	// Simulate ADVANCE for p1
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
 	p1.Action = "ADVANCE"
 	p2.Action = "ADVANCE"
-	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
-	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1)
+	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
+	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
+	p1.Energy, _ = p1.resolveCombat(&p2)
+	p2.Energy, _ = p2.resolveCombat(&p1)
 	gs.PlayerStates["p1"] = p1
 	gs.PlayerStates["p2"] = p2
 
@@ -30,10 +30,11 @@ func TestAdvanceDoubleAttack(t *testing.T) {
 	// Next turn: p1 attacks, p2 waits
 	p1.Action = "ATTACK"
 	p2.Action = "WAIT"
-	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
-	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1)
+	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
+	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
+	p1.Energy, _ = p1.resolveCombat(&p2)
+	p2.Energy, _ = p2.resolveCombat(&p1)
 
-	// 10 -1 -6 +1 = 4
 	if p2.Energy != 4 {
 		t.Errorf("Expected p2 energy to be 4 after double attack, got %d", p2.Energy)
 	}
@@ -53,8 +54,10 @@ func TestCounterReflect(t *testing.T) {
 
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
-	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
-	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1)
+	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
+	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
+	p1.Energy, _ = p1.resolveCombat(&p2)
+	p2.Energy, _ = p2.resolveCombat(&p1)
 
 	if p1.Energy != 7 {
 		t.Errorf("Expected p1 energy to be 7 after counter reflect, got %d", p1.Energy)
@@ -75,10 +78,10 @@ func TestCounterPenalty(t *testing.T) {
 
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
-
-	if p2.Action != "ATTACK" {
-		p1.Energy -= 2
-	}
+	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
+	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
+	p1.Energy, _ = p1.resolveCombat(&p2)
+	p2.Energy, _ = p2.resolveCombat(&p1)
 
 	if p1.Energy != 8 {
 		t.Errorf("Expected p1 energy to be 8 after counter penalty, got %d", p1.Energy)
@@ -97,9 +100,9 @@ func TestWaitEnergy(t *testing.T) {
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
 
-	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
-	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1)
-	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
+	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
+	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
+	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
 
 	if p1.Energy != 12 {
 		t.Errorf("Expected p1 energy to be 12 after WAIT twice, got %d", p1.Energy)
@@ -120,9 +123,8 @@ func TestRetreatAdvanceEnergy(t *testing.T) {
 
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
-
-	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
-	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1)
+	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
+	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
 
 	if p1.Energy != 9 {
 		t.Errorf("Expected p1 energy to be 9 after RETREAT, got %d", p1.Energy)
@@ -146,8 +148,10 @@ func TestAttackAdjacentHit(t *testing.T) {
 
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
-	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
-	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1)
+	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
+	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
+	p1.Energy, _ = p1.resolveCombat(&p2)
+	p2.Energy, _ = p2.resolveCombat(&p1)
 
 	if p2.Energy != 8 {
 		t.Errorf("Expected p2 energy to be 8 after adjacent attack, got %d", p2.Energy)
@@ -165,8 +169,10 @@ func TestAttackNotAdjacentMiss(t *testing.T) {
 
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
-	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
-	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1)
+	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
+	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
+	p1.Energy, _ = p1.resolveCombat(&p2)
+	p2.Energy, _ = p2.resolveCombat(&p1)
 
 	if p2.Energy != 11 {
 		t.Errorf("Expected p2 energy to be 11 after non-adjacent attack, got %d", p2.Energy)
@@ -187,8 +193,10 @@ func TestAttackMissOnRetreat(t *testing.T) {
 
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
-	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
-	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1)
+	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
+	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
+	p1.Energy, _ = p1.resolveCombat(&p2)
+	p2.Energy, _ = p2.resolveCombat(&p1)
 
 	if p2.Energy != 9 {
 		t.Errorf("Expected p2 energy to be 9 after retreat, got %d", p2.Energy)
@@ -209,8 +217,10 @@ func TestCounterOnlyIfAdjacent(t *testing.T) {
 
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
-	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
-	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1)
+	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
+	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
+	p1.Energy, _ = p1.resolveCombat(&p2)
+	p2.Energy, _ = p2.resolveCombat(&p1)
 
 	if p1.Energy != 9 {
 		t.Errorf("Expected p1 energy to be 9 after non-adjacent counter, got %d", p1.Energy)
