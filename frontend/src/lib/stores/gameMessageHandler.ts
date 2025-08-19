@@ -22,7 +22,7 @@ export function gameMessageHandler(msg: any) {
             gs.you = payload.playerStates.you || {};
             break;
         case 'WAITING_FOR_OPPONENT':
-            gs.lastAction = 'Waiting for opponent...';
+            gs.lastAction = payload.message;
             break;
         default:
             console.log('unknown emit from server', msg);

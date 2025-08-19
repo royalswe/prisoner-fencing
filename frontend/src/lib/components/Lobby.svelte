@@ -5,7 +5,6 @@
   import { connect, send } from "../ws";
 
   const states = useState();
-
   let newRoomName = "";
   let newMessage = "";
 
@@ -44,12 +43,12 @@
 </script>
 
 <main>
-  <h1>Prisoner Fencing</h1>
-  state: {states.userState}
-
-  <section>
-    <h2>Lobby</h2>
-    <div>
+  <h1 style="letter-spacing: 2px; font-size: 2.5em; margin-bottom: 0.5em;">
+    Prisoner Fencing
+  </h1>
+  <section class="lobby-card">
+    <h2 style="margin-top: 0;">Lobby</h2>
+    <div class="your-id">
       <strong>Your ID:</strong>
       {PLAYER_ID}
     </div>
@@ -57,35 +56,143 @@
       <div>Connecting to lobby...</div>
     {:else}
       <div>
-        <h3>Available Rooms</h3>
+        <h3 style="margin-bottom: 0.5em;">Available Rooms</h3>
         {#if states.rooms.length === 0}
           <div>No rooms yet.</div>
         {:else}
-          <ul>
+          <ul class="room-list">
             {#each states.rooms as room}
               <li>
-                {room} <button onclick={() => joinRoom(room)}>Join</button>
+                <span>{room}</span>
+                <button onclick={() => joinRoom(room)}>Join</button>
               </li>
             {/each}
           </ul>
         {/if}
-        <input
-          placeholder="New room name"
-          bind:value={newRoomName}
-          onkeydown={(e) => e.key === "Enter" && createRoom()}
-        />
-        <button onclick={createRoom}>Create Room</button>
-
-        <input
-          placeholder="Message"
-          bind:value={newMessage}
-          onkeydown={(e) => e.key === "Enter" && sendMessage(newMessage)}
-        />
-        <button onclick={() => sendMessage(newMessage)}>Send Message</button>
+        <div class="input-row">
+          <input
+            placeholder="New room name"
+            bind:value={newRoomName}
+            onkeydown={(e) => e.key === "Enter" && createRoom()}
+          />
+          <button onclick={createRoom}>Create Room</button>
+        </div>
       </div>
       {#if states.error}
-        <div style="color: red">{states.error}</div>
+        <div class="error">{states.error}</div>
       {/if}
     {/if}
   </section>
 </main>
+
+<style>
+  main {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 2rem 0;
+  }
+
+  .lobby-card {
+    background: linear-gradient(135deg, #ffb347 0%, #ffcc80 100%);
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+    padding: 2rem;
+    margin: 2rem 0;
+    max-width: 420px;
+    width: 100%;
+    transition: background 0.2s;
+  }
+
+  :root[data-theme="dark"] .lobby-card {
+    background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
+  }
+
+  .room-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+  }
+  .room-list li {
+    background: var(--toggle-bg);
+    color: var(--toggle-fg);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 1.1em;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  }
+  .room-list li button {
+    background: linear-gradient(90deg, #ff6a00 0%, #ee0979 100%);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.3em 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  :root[data-theme="dark"] .room-list li button {
+    background: linear-gradient(90deg, #43cea2 0%, #185a9d 100%);
+  }
+  .room-list li button:hover {
+    filter: brightness(1.1);
+  }
+
+  .input-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  .input-row input {
+    flex: 1;
+    padding: 0.5em 1em;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+    background: var(--toggle-bg);
+    color: var(--toggle-fg);
+    transition: border-color 0.2s;
+  }
+  .input-row input:focus {
+    border-color: #646cff;
+    outline: none;
+  }
+  .input-row button {
+    background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+    color: #222;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5em 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  :root[data-theme="dark"] .input-row button {
+    background: linear-gradient(90deg, #fc00ff 0%, #00dbde 100%);
+    color: #fff;
+  }
+  .input-row button:hover {
+    filter: brightness(1.1);
+  }
+
+  .error {
+    color: #d32f2f;
+    margin-top: 1rem;
+    font-weight: bold;
+  }
+  .your-id {
+    font-size: 1.1em;
+    background: var(--toggle-bg);
+    color: var(--toggle-fg);
+    border-radius: 8px;
+    padding: 0.3em 1em;
+    margin-bottom: 1rem;
+    display: inline-block;
+  }
+</style>

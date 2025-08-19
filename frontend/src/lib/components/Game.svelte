@@ -83,7 +83,7 @@
 
 <h2>Prisoner's Fencing - Room: {room}</h2>
 {#if gs.gameOver}
-  <p style="font-size: 1.5em; color: #23cb00; font-weight: 700;">
+  <p class="game-over">
     {gs.winner}
   </p>
 {/if}
@@ -160,41 +160,79 @@
     gap: 0.5em;
   }
   .board-cell {
-    width: 48px;
-    height: 48px;
-    border: 2px solid #ccc;
-    border-radius: 8px;
+    width: 76px;
+    height: 76px;
+    border: 2px solid #646cff;
+    border-radius: 10px;
     position: relative;
-    background: #f8f8f8;
+    background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
   }
-
+  :root[data-theme="dark"] .board-cell {
+    background: linear-gradient(135deg, #434343 0%, #262626 100%);
+    border-color: #43cea2;
+  }
+  .player-cell {
+    background: linear-gradient(135deg, #ff5858 0%, #f09819 100%) !important;
+    border: 2px solid #d7263d;
+  }
+  .opponent-cell {
+    background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%) !important;
+    border: 2px solid #185a9d;
+  }
   .action-img {
     width: 100%;
     height: 100%;
   }
-
   .player-info-row {
     display: flex;
     gap: 2em;
     margin: 1em 0;
+    justify-content: center;
   }
   .actions-section {
     margin-bottom: 1em;
+    margin-top: 1em;
   }
   .actions-row {
     display: flex;
     gap: 1em;
     flex-wrap: wrap;
+    justify-content: center;
   }
   .action-btn-img {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     vertical-align: middle;
     margin-bottom: 0.2em;
   }
-
   .reverse-img {
     -webkit-transform: scaleX(-1);
     transform: scaleX(-1);
+  }
+  button[aria-label] {
+    background: linear-gradient(90deg, #f7971e 0%, #ffd200 100%);
+    color: #222;
+    border: none;
+    border-radius: 10px;
+    padding: 0.7em 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    transition: background 0.2s;
+  }
+  :root[data-theme="dark"] button[aria-label] {
+    background: linear-gradient(90deg, #232526 0%, #414345 100%);
+    color: #eee;
+  }
+  button[aria-label]:hover {
+    filter: brightness(1.1);
+  }
+
+  .game-over {
+    font-size: 1.5em;
+    color: #23cb00;
+    font-weight: 700;
+    margin-bottom: 1em;
   }
 </style>

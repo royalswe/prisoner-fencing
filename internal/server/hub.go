@@ -24,7 +24,7 @@ func (h *Hub) setupEventHandlers() {
 	h.handlers[EventLeaveRoom] = SendMessage
 	h.handlers[EventListRooms] = ListRoomHandler
 	h.handlers[EventInitClient] = InitClientHandler
-	h.handlers["game_action"] = GameActionHandler
+	h.handlers[EventGameAction] = GameActionHandler
 }
 
 func InitClientHandler(event Event, c *Client) error {
@@ -40,7 +40,6 @@ func InitClientHandler(event Event, c *Client) error {
 		Payload: json.RawMessage(fmt.Sprintf(`{"playerId": "%s"}`, c.id)),
 	}, c)
 
-	log.Printf("Client initialized with Player ID: %s", c.id)
 	return nil
 }
 
@@ -67,7 +66,7 @@ func ListRoomHandler(event Event, c *Client) error {
 		Type:    EventListRooms,
 		Payload: data,
 	}
-	broadcast(outgoingEvent, c.hub)
+	roomEmit(outgoingEvent, "", c.hub)
 
 	return nil
 }
@@ -182,11 +181,11 @@ func emit(event Event, client *Client) {
 }
 
 // Send an event to all connected clients
-func broadcast(event Event, h *Hub) {
-	for client := range h.client {
-		client.egress <- event
-	}
-}
+// func broadcast(event Event, h *Hub) {
+// 	for client := range h.client {
+// 		client.egress <- event
+// 	}
+// }
 
 // Send an event to all clients in the same room
 func roomEmit(event Event, room string, h *Hub) {

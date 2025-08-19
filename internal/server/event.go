@@ -18,6 +18,7 @@ const (
 	EventJoinRoom    = "join_room"
 	EventLeaveRoom   = "leave_room"
 	EventInitClient  = "init_client"
+	EventGameAction  = "game_action"
 )
 
 type SendMessageEvent struct {

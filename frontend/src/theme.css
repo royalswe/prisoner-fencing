@@ -1,12 +1,12 @@
 /* Basic CSS variables for light and dark mode */
 :root[data-theme="light"] {
-  --bg: #fff;
+  --bg: linear-gradient(135deg, #8cc3ebff 0%, #ae9eeaff 100%);
   --fg: #222;
   --toggle-bg: #eee;
   --toggle-fg: #222;
 }
 :root[data-theme="dark"] {
-  --bg: #222;
+  --bg: linear-gradient(135deg, #133146ff 0%, #2f264fff 100%);
   --fg: #eee;
   --toggle-bg: #333;
   --toggle-fg: #eee;

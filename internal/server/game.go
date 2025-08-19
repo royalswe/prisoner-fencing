@@ -63,11 +63,12 @@ func GameActionHandler(event Event, c *Client) error {
 	for pid := range gs.PlayerStates {
 		ids = append(ids, pid)
 	}
-	fmt.Print(ids)
 
 	if len(ids) != 2 {
-		fmt.Printf("expected 2 players, got %d", len(ids))
-		fmt.Printf("ids: %+v\n", ids)
+		emit(Event{
+			Type:    "WAITING_FOR_OPPONENT",
+			Payload: json.RawMessage(`{"message": "Waiting for opponent to arrive"}`),
+		}, c)
 		return nil
 	}
 	// Game logic
@@ -76,9 +77,9 @@ func GameActionHandler(event Event, c *Client) error {
 
 	// Check if both players have made their actions
 	if p1.Action == "" || p2.Action == "" {
-		// Not enough players, wait for the opponent
 		emit(Event{
-			Type: "WAITING_FOR_OPPONENT",
+			Type:    "WAITING_FOR_OPPONENT",
+			Payload: json.RawMessage(`{"message": "Waiting for opponent to act"}`),
 		}, c)
 		return nil
 	}

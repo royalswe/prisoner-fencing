@@ -71,5 +71,6 @@ button:focus-visible {
 }
 
 .js-highlight {
-  outline: 2px solid yellow !important;
+  outline: 3px solid #d0ff00ff !important;
+  box-shadow: 0 0 8px #d0ff00ff;
 }
