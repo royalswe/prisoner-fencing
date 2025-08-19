@@ -5,6 +5,14 @@ import (
 	"fmt"
 )
 
+// abs returns the absolute value of an integer
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
 type GameState struct {
 	Turn         int                    `json:"turn"`
 	MaxTurns     int                    `json:"maxTurns"`
@@ -192,17 +200,35 @@ func (p1 *PlayerState) resolveAction(p2 *PlayerState) (int, int, string) {
 		if p1.Advanced {
 			dmg = 6
 		}
-		if p2.Action == "COUNTER" {
-			p1.Energy -= dmg
-			log = fmt.Sprintf("Opponent countered! takes %d damage.", dmg)
-		} else {
-			p2.Energy -= dmg
-			log = fmt.Sprintf("Attacked for %d damage.", dmg)
+		adjacent := abs(p1.Pos-p2.Pos) == 1
+		switch p2.Action {
+		case "COUNTER":
+			if adjacent {
+				p1.Energy -= dmg
+				log = fmt.Sprintf("Opponent countered! takes %d damage.", dmg)
+			} else {
+				log = "Countered, but not adjacent. No damage."
+				p1.Energy--
+			}
+		case "RETREAT":
+			log = "Attack missed! Opponent retreated."
+			p1.Energy--
+		default:
+			if adjacent {
+				p2.Energy -= dmg
+				log = fmt.Sprintf("Attacked for %d damage.", dmg)
+			} else {
+				log = "Attack missed! Not adjacent."
+				p1.Energy--
+			}
 		}
 	case "COUNTER":
-		if p2.Action != "ATTACK" {
+		adjacent := abs(p1.Pos-p2.Pos) == 1
+		if p2.Action != "ATTACK" || !adjacent {
 			p1.Energy -= 2
 			log = "Countered nothing. -2 Energy."
+		} else if p2.Action != "ATTACK" {
+			log = "Countered nothing, but not adjacent. No penalty."
 		}
 	}
 	if p1.Action != "ADVANCE" {

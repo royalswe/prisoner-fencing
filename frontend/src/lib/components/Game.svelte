@@ -110,7 +110,7 @@
           <img
             src={actionIcons[gs.opponent.action] || actionIcons.DEFAULT}
             alt={gs.opponent.action}
-            class="action-img"
+            class="action-img reverse-img"
           />
         </span>
       {:else}
@@ -191,5 +191,10 @@
     height: 24px;
     vertical-align: middle;
     margin-bottom: 0.2em;
+  }
+
+  .reverse-img {
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
   }
 </style>

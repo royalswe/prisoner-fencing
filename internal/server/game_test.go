@@ -134,3 +134,88 @@ func TestRetreatAdvanceEnergy(t *testing.T) {
 		t.Errorf("Expected p2.Advanced to be true after ADVANCE")
 	}
 }
+
+func TestAttackAdjacentHit(t *testing.T) {
+	gs := &GameState{
+		Turn:         1,
+		MaxTurns:     20,
+		PlayerStates: map[string]PlayerState{},
+	}
+	gs.PlayerStates["p1"] = PlayerState{Pos: 2, Energy: 10, Action: "ATTACK", Advanced: false, Player: 1}
+	gs.PlayerStates["p2"] = PlayerState{Pos: 3, Energy: 10, Action: "WAIT", Advanced: false, Player: 2}
+
+	p1 := gs.PlayerStates["p1"]
+	p2 := gs.PlayerStates["p2"]
+	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
+	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1)
+
+	if p2.Energy != 8 {
+		t.Errorf("Expected p2 energy to be 8 after adjacent attack, got %d", p2.Energy)
+	}
+}
+
+func TestAttackNotAdjacentMiss(t *testing.T) {
+	gs := &GameState{
+		Turn:         1,
+		MaxTurns:     20,
+		PlayerStates: map[string]PlayerState{},
+	}
+	gs.PlayerStates["p1"] = PlayerState{Pos: 2, Energy: 10, Action: "ATTACK", Advanced: false, Player: 1}
+	gs.PlayerStates["p2"] = PlayerState{Pos: 4, Energy: 10, Action: "WAIT", Advanced: false, Player: 2}
+
+	p1 := gs.PlayerStates["p1"]
+	p2 := gs.PlayerStates["p2"]
+	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
+	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1)
+
+	if p2.Energy != 11 {
+		t.Errorf("Expected p2 energy to be 11 after non-adjacent attack, got %d", p2.Energy)
+	}
+	if p1.Energy != 9 {
+		t.Errorf("Expected p1 energy to be 9 after missed attack, got %d", p1.Energy)
+	}
+}
+
+func TestAttackMissOnRetreat(t *testing.T) {
+	gs := &GameState{
+		Turn:         1,
+		MaxTurns:     20,
+		PlayerStates: map[string]PlayerState{},
+	}
+	gs.PlayerStates["p1"] = PlayerState{Pos: 2, Energy: 10, Action: "ATTACK", Advanced: false, Player: 1}
+	gs.PlayerStates["p2"] = PlayerState{Pos: 3, Energy: 10, Action: "RETREAT", Advanced: false, Player: 2}
+
+	p1 := gs.PlayerStates["p1"]
+	p2 := gs.PlayerStates["p2"]
+	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
+	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1)
+
+	if p2.Energy != 9 {
+		t.Errorf("Expected p2 energy to be 9 after retreat, got %d", p2.Energy)
+	}
+	if p1.Energy != 9 {
+		t.Errorf("Expected p1 energy to be 9 after missed attack on retreat, got %d", p1.Energy)
+	}
+}
+
+func TestCounterOnlyIfAdjacent(t *testing.T) {
+	gs := &GameState{
+		Turn:         1,
+		MaxTurns:     20,
+		PlayerStates: map[string]PlayerState{},
+	}
+	gs.PlayerStates["p1"] = PlayerState{Pos: 2, Energy: 10, Action: "ATTACK", Advanced: false, Player: 1}
+	gs.PlayerStates["p2"] = PlayerState{Pos: 4, Energy: 10, Action: "COUNTER", Advanced: false, Player: 2}
+
+	p1 := gs.PlayerStates["p1"]
+	p2 := gs.PlayerStates["p2"]
+	p1.Pos, p1.Energy, _ = p1.resolveAction(&p2)
+	p2.Pos, p2.Energy, _ = p2.resolveAction(&p1)
+
+	if p1.Energy != 9 {
+		t.Errorf("Expected p1 energy to be 9 after non-adjacent counter, got %d", p1.Energy)
+	}
+	if p2.Energy != 8 {
+		t.Errorf("Expected p2 energy to be 8 after non-adjacent counter, got %d", p2.Energy)
+	}
+}
