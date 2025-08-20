@@ -17,8 +17,13 @@ func TestAdvanceDoubleAttack(t *testing.T) {
 	p2 := gs.PlayerStates["p2"]
 	p1.Action = "ADVANCE"
 	p2.Action = "ADVANCE"
-	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
-	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
+	// Simulate movement resolution
+	intendedPos1, energy1, _ := p1.resolveIntendedMovement()
+	intendedPos2, energy2, _ := p2.resolveIntendedMovement()
+	// Both try to move to same square (3), p1 gets priority
+	p1.Pos = intendedPos1
+	p1.Energy = energy1
+	p2.Energy = energy2
 	p1.Energy, _ = p1.resolveCombat(&p2)
 	p2.Energy, _ = p2.resolveCombat(&p1)
 	gs.PlayerStates["p1"] = p1
@@ -30,8 +35,12 @@ func TestAdvanceDoubleAttack(t *testing.T) {
 	// Next turn: p1 attacks, p2 waits
 	p1.Action = "ATTACK"
 	p2.Action = "WAIT"
-	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
-	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
+	intendedPos1, energy1, _ = p1.resolveIntendedMovement()
+	intendedPos2, energy2, _ = p2.resolveIntendedMovement()
+	p1.Pos = intendedPos1
+	p2.Pos = intendedPos2
+	p1.Energy = energy1
+	p2.Energy = energy2
 	p1.Energy, _ = p1.resolveCombat(&p2)
 	p2.Energy, _ = p2.resolveCombat(&p1)
 
@@ -54,8 +63,12 @@ func TestCounterReflect(t *testing.T) {
 
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
-	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
-	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
+	intendedPos1, energy1, _ := p1.resolveIntendedMovement()
+	intendedPos2, energy2, _ := p2.resolveIntendedMovement()
+	p1.Pos = intendedPos1
+	p2.Pos = intendedPos2
+	p1.Energy = energy1
+	p2.Energy = energy2
 	p1.Energy, _ = p1.resolveCombat(&p2)
 	p2.Energy, _ = p2.resolveCombat(&p1)
 
@@ -78,8 +91,12 @@ func TestCounterPenalty(t *testing.T) {
 
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
-	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
-	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
+	intendedPos1, energy1, _ := p1.resolveIntendedMovement()
+	intendedPos2, energy2, _ := p2.resolveIntendedMovement()
+	p1.Pos = intendedPos1
+	p2.Pos = intendedPos2
+	p1.Energy = energy1
+	p2.Energy = energy2
 	p1.Energy, _ = p1.resolveCombat(&p2)
 	p2.Energy, _ = p2.resolveCombat(&p1)
 
@@ -100,9 +117,16 @@ func TestWaitEnergy(t *testing.T) {
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
 
-	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
-	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
-	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
+	intendedPos1, energy1, _ := p1.resolveIntendedMovement()
+	intendedPos2, energy2, _ := p2.resolveIntendedMovement()
+	p1.Pos = intendedPos1
+	p2.Pos = intendedPos2
+	p1.Energy = energy1
+	p2.Energy = energy2
+
+	intendedPos1, energy1, _ = p1.resolveIntendedMovement()
+	p1.Pos = intendedPos1
+	p1.Energy = energy1
 
 	if p1.Energy != 12 {
 		t.Errorf("Expected p1 energy to be 12 after WAIT twice, got %d", p1.Energy)
@@ -123,8 +147,12 @@ func TestRetreatAdvanceEnergy(t *testing.T) {
 
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
-	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
-	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
+	intendedPos1, energy1, _ := p1.resolveIntendedMovement()
+	intendedPos2, energy2, _ := p2.resolveIntendedMovement()
+	p1.Pos = intendedPos1
+	p2.Pos = intendedPos2
+	p1.Energy = energy1
+	p2.Energy = energy2
 
 	if p1.Energy != 9 {
 		t.Errorf("Expected p1 energy to be 9 after RETREAT, got %d", p1.Energy)
@@ -148,8 +176,12 @@ func TestAttackAdjacentHit(t *testing.T) {
 
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
-	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
-	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
+	intendedPos1, energy1, _ := p1.resolveIntendedMovement()
+	intendedPos2, energy2, _ := p2.resolveIntendedMovement()
+	p1.Pos = intendedPos1
+	p2.Pos = intendedPos2
+	p1.Energy = energy1
+	p2.Energy = energy2
 	p1.Energy, _ = p1.resolveCombat(&p2)
 	p2.Energy, _ = p2.resolveCombat(&p1)
 
@@ -169,8 +201,12 @@ func TestAttackNotAdjacentMiss(t *testing.T) {
 
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
-	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
-	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
+	intendedPos1, energy1, _ := p1.resolveIntendedMovement()
+	intendedPos2, energy2, _ := p2.resolveIntendedMovement()
+	p1.Pos = intendedPos1
+	p2.Pos = intendedPos2
+	p1.Energy = energy1
+	p2.Energy = energy2
 	p1.Energy, _ = p1.resolveCombat(&p2)
 	p2.Energy, _ = p2.resolveCombat(&p1)
 
@@ -193,8 +229,12 @@ func TestAttackMissOnRetreat(t *testing.T) {
 
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
-	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
-	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
+	intendedPos1, energy1, _ := p1.resolveIntendedMovement()
+	intendedPos2, energy2, _ := p2.resolveIntendedMovement()
+	p1.Pos = intendedPos1
+	p2.Pos = intendedPos2
+	p1.Energy = energy1
+	p2.Energy = energy2
 	p1.Energy, _ = p1.resolveCombat(&p2)
 	p2.Energy, _ = p2.resolveCombat(&p1)
 
@@ -217,8 +257,12 @@ func TestCounterOnlyIfAdjacent(t *testing.T) {
 
 	p1 := gs.PlayerStates["p1"]
 	p2 := gs.PlayerStates["p2"]
-	p1.Pos, p1.Energy, _ = p1.resolveMovement(&p2)
-	p2.Pos, p2.Energy, _ = p2.resolveMovement(&p1)
+	intendedPos1, energy1, _ := p1.resolveIntendedMovement()
+	intendedPos2, energy2, _ := p2.resolveIntendedMovement()
+	p1.Pos = intendedPos1
+	p2.Pos = intendedPos2
+	p1.Energy = energy1
+	p2.Energy = energy2
 	p1.Energy, _ = p1.resolveCombat(&p2)
 	p2.Energy, _ = p2.resolveCombat(&p1)
 

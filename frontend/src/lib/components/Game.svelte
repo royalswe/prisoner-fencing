@@ -231,8 +231,12 @@
 
   .game-over {
     font-size: 1.5em;
-    color: #23cb00;
+    color: #e400e6;
     font-weight: 700;
     margin-bottom: 1em;
+  }
+
+  :root[data-theme="dark"] .game-over {
+    color: #23cb00;
   }
 </style>

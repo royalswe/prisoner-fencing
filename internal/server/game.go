@@ -84,10 +84,13 @@ func GameActionHandler(event Event, c *Client) error {
 		return nil
 	}
 
-	// First resolve movement for both players
+	// Simultaneous movement resolution
+	var intendedPos1, intendedPos2 int
 	var movementLog1, movementLog2 string
-	p1.Pos, p1.Energy, movementLog1 = p1.resolveMovement(&p2)
-	p2.Pos, p2.Energy, movementLog2 = p2.resolveMovement(&p1)
+	intendedPos1, p1.Energy, movementLog1 = p1.resolveIntendedMovement()
+	intendedPos2, p2.Energy, movementLog2 = p2.resolveIntendedMovement()
+	p1.Pos, p2.Pos = resolveSimultaneousMovement(p1.Pos, intendedPos1, p2.Pos, intendedPos2)
+
 	// Then resolve combat for both players
 	var combatLog1, combatLog2 string
 	p1.Energy, combatLog1 = p1.resolveCombat(&p2)
@@ -155,12 +158,11 @@ func GameActionHandler(event Event, c *Client) error {
 }
 
 // Movement actions: WAIT, RETREAT, ADVANCE
-func (p1 *PlayerState) resolveMovement(p2 *PlayerState) (int, int, string) {
-	log := ""
+// Returns intended new position, new energy, and movement log
+func (p1 *PlayerState) resolveIntendedMovement() (int, int, string) {
 	switch p1.Action {
 	case "WAIT":
-		p1.Energy++
-		log = "WAIT: +1 Energy"
+		return p1.Pos, p1.Energy + 1, "WAIT: +1 Energy"
 	case "RETREAT":
 		var newPos int
 		if p1.Player == 1 {
@@ -168,11 +170,7 @@ func (p1 *PlayerState) resolveMovement(p2 *PlayerState) (int, int, string) {
 		} else {
 			newPos = min(6, p1.Pos+1)
 		}
-		if newPos != p2.Pos {
-			p1.Pos = newPos
-		}
-		p1.Energy--
-		log = "RETREAT: -1 Energy"
+		return newPos, p1.Energy - 1, "RETREAT: -1 Energy"
 	case "ADVANCE":
 		var newPos int
 		if p1.Player == 1 {
@@ -180,14 +178,10 @@ func (p1 *PlayerState) resolveMovement(p2 *PlayerState) (int, int, string) {
 		} else {
 			newPos = max(0, p1.Pos-1)
 		}
-		if newPos != p2.Pos {
-			p1.Pos = newPos
-		}
-		p1.Energy--
 		p1.Advanced = true
-		log = "ADVANCE: Double attack next turn"
+		return newPos, p1.Energy - 1, "ADVANCE: Double attack next turn"
 	}
-	return p1.Pos, p1.Energy, log
+	return p1.Pos, p1.Energy, ""
 }
 
 // Combat actions: ATTACK, COUNTER
@@ -232,6 +226,28 @@ func (p1 *PlayerState) resolveCombat(p2 *PlayerState) (int, string) {
 		p1.Advanced = false
 	}
 	return p1.Energy, log
+}
+
+// resolveSimultaneousMovement applies blocking, swap, and priority rules and returns new positions for both players
+func resolveSimultaneousMovement(pos1, intended1, pos2, intended2 int) (newPos1, newPos2 int) {
+	// Swap places: both blocked
+	if intended1 == pos2 && intended2 == pos1 {
+		return pos1, pos2
+	}
+	// Both try to move to same square (not their current): player 1 gets priority
+	if intended1 == intended2 && intended1 != pos1 && intended2 != pos2 {
+		return intended1, pos2
+	}
+	// p1 blocked by p2
+	if intended1 == pos2 && intended2 == pos2 {
+		return pos1, intended2
+	}
+	// p2 blocked by p1
+	if intended2 == pos1 && intended1 == pos1 {
+		return intended1, pos2
+	}
+	// Otherwise, both move
+	return intended1, intended2
 }
 
 // abs returns the absolute value of an integer

@@ -1,3 +1,18 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 600;
+  font-size: 16px;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #181a1b;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 /* Basic CSS variables for light and dark mode */
 :root[data-theme="light"] {
   --bg: linear-gradient(135deg, #8cc3ebff 0%, #ae9eeaff 100%);
@@ -10,9 +25,4 @@
   --fg: #eee;
   --toggle-bg: #333;
   --toggle-fg: #eee;
-}
-body {
-  background: var(--bg);
-  color: var(--fg);
-  transition: background 0.2s, color 0.2s;
 }
