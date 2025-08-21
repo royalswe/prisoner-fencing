@@ -79,6 +79,21 @@
     }
     return arr;
   }
+
+  let youEnergyChange = $state(0);
+  let opponentEnergyChange = $state(0);
+
+  // keep last value in a normal variable
+  let youLastEnergy = gs.you.energy;
+  let opponentLastEnergy = gs.opponent.energy;
+
+  // run every time `energy` changes
+  $effect(() => {
+    youEnergyChange = gs.you.energy - youLastEnergy;
+    youLastEnergy = gs.you.energy;
+    opponentEnergyChange = gs.opponent.energy - opponentLastEnergy;
+    opponentLastEnergy = gs.opponent.energy;
+  });
 </script>
 
 <h2>Prisoner's Fencing - Room: {room}</h2>
@@ -123,13 +138,64 @@
 <div class="player-info-row">
   <div>
     <strong>You</strong><br />
-    Energy: {gs.you.energy}<br />
-    Position: {gs.you.player === 2 ? 6 - gs.you.pos : gs.you.pos}
+    <div class="info-table">
+      <div class="info-row">
+        <span class="info-label">Energy:</span>
+        <span class="info-value">
+          {#if youEnergyChange !== 0}
+            <span
+              style="color: {youEnergyChange > 0
+                ? 'green'
+                : 'red'}; font-weight: bold; margin-left: 0.5em;"
+            >
+              ({youEnergyChange > 0 ? "+" : ""}{youEnergyChange})
+            </span>
+          {/if}
+          {gs.you.energy}
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Position:</span>
+        <span class="info-value"
+          >{gs.you.player === 2 ? 6 - gs.you.pos : gs.you.pos}</span
+        >
+      </div>
+      <div class="info-row">
+        <span class="info-label">Advanced:</span>
+        <span class="info-value">{gs.you.advanced ? "True" : "False"}</span>
+      </div>
+    </div>
   </div>
   <div>
     <strong>Opponent</strong><br />
-    Energy: {gs.opponent.energy}<br />
-    Position: {gs.you.player === 2 ? 6 - gs.opponent.pos : gs.opponent.pos}
+    <div class="info-table">
+      <div class="info-row">
+        <span class="info-label">Energy:</span>
+        <span class="info-value">
+          {#if opponentEnergyChange !== 0}
+            <span
+              style="color: {opponentEnergyChange > 0
+                ? 'green'
+                : 'red'}; font-weight: bold; margin-left: 0.5em;"
+            >
+              ({opponentEnergyChange > 0 ? "+" : ""}{opponentEnergyChange})
+            </span>
+          {/if}
+          {gs.opponent.energy}
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Position:</span>
+        <span class="info-value"
+          >{gs.you.player === 2 ? 6 - gs.opponent.pos : gs.opponent.pos}</span
+        >
+      </div>
+      <div class="info-row">
+        <span class="info-label">Advanced:</span>
+        <span class="info-value">{gs.opponent.advanced ? "True" : "False"}</span
+        >
+      </div>
+    </div>
   </div>
 </div>
 <div class="actions-section">
@@ -153,90 +219,23 @@
 </div>
 
 <style>
-  .board-row {
+  .info-table {
     display: flex;
-    justify-content: center;
-    margin: 1em 0;
-    gap: 0.5em;
+    flex-direction: column;
+    margin-top: 0.5em;
   }
-  .board-cell {
-    width: 76px;
-    height: 76px;
-    border: 2px solid #646cff;
-    border-radius: 10px;
-    position: relative;
-    background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
-  }
-  :root[data-theme="dark"] .board-cell {
-    background: linear-gradient(135deg, #434343 0%, #262626 100%);
-    border-color: #43cea2;
-  }
-  .player-cell {
-    background: linear-gradient(135deg, #ff5858 0%, #f09819 100%) !important;
-    border: 2px solid #d7263d;
-  }
-  .opponent-cell {
-    background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%) !important;
-    border: 2px solid #185a9d;
-  }
-  .action-img {
-    width: 100%;
-    height: 100%;
-  }
-  .player-info-row {
+  .info-row {
     display: flex;
-    gap: 2em;
-    margin: 1em 0;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: center;
   }
-  .actions-section {
-    margin-bottom: 1em;
-    margin-top: 1em;
+  .info-label {
+    text-align: left;
+    min-width: 110px;
+    font-weight: 600;
   }
-  .actions-row {
-    display: flex;
-    gap: 1em;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .action-btn-img {
-    width: 28px;
-    height: 28px;
-    vertical-align: middle;
-    margin-bottom: 0.2em;
-  }
-  .reverse-img {
-    -webkit-transform: scaleX(-1);
-    transform: scaleX(-1);
-  }
-  button[aria-label] {
-    background: linear-gradient(90deg, #f7971e 0%, #ffd200 100%);
-    color: #222;
-    border: none;
-    border-radius: 10px;
-    padding: 0.7em 1.2em;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
-    transition: background 0.2s;
-  }
-  :root[data-theme="dark"] button[aria-label] {
-    background: linear-gradient(90deg, #232526 0%, #414345 100%);
-    color: #eee;
-  }
-  button[aria-label]:hover {
-    filter: brightness(1.1);
-  }
-
-  .game-over {
-    font-size: 1.5em;
-    color: #e400e6;
-    font-weight: 700;
-    margin-bottom: 1em;
-  }
-
-  :root[data-theme="dark"] .game-over {
-    color: #23cb00;
+  .info-value {
+    text-align: right;
+    font-weight: 600;
   }
 </style>

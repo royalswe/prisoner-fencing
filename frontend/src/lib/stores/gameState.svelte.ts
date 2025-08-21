@@ -36,6 +36,6 @@ export function gameState() {
 		get opponent() { return opponent; },
 		set opponent(value) { opponent = value; },
 		get you() { return you; },
-		set you(value) { you = value; }
+		set you(value) { you = value; },
 	};
 }
