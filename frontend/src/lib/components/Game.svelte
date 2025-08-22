@@ -96,146 +96,137 @@
   });
 </script>
 
-<h2>Prisoner's Fencing - Room: {room}</h2>
-{#if gs.gameOver}
-  <p class="game-over">
-    {gs.winner}
-  </p>
-{/if}
-{gs.lastAction || "Choose an action!"}
-<div class="board-row">
-  {#each getBoardActions() as val}
-    <div
-      class="board-cell {val === 'PLAYER'
-        ? 'player-cell'
-        : val === 'OPPONENT'
-          ? 'opponent-cell'
-          : ''}"
-    >
-      {#if val === "PLAYER"}
-        <span>
-          <img
-            src={actionIcons[gs.you.action] || actionIcons.DEFAULT}
-            alt={gs.you.action}
-            class="action-img"
-          />
-        </span>
-      {:else if val === "OPPONENT"}
-        <span>
-          <img
-            src={actionIcons[gs.opponent.action] || actionIcons.DEFAULT}
-            alt={gs.opponent.action}
-            class="action-img reverse-img"
-          />
-        </span>
-      {:else}
-        <span></span>
-      {/if}
-    </div>
-  {/each}
-</div>
-<div>Turn: {gs.turn} / {gs.maxTurns}</div>
-<div class="player-info-row">
-  <div>
-    <strong>You</strong><br />
-    <div class="info-table">
-      <div class="info-row">
-        <span class="info-label">Energy:</span>
-        <span class="info-value">
-          {#if youEnergyChange !== 0}
-            <span
-              style="color: {youEnergyChange > 0
-                ? 'green'
-                : 'red'}; font-weight: bold; margin-left: 0.5em;"
-            >
-              ({youEnergyChange > 0 ? "+" : ""}{youEnergyChange})
+<div class="game-grid-container">
+  <header class="game-header">
+    <h2>Prisoner's Fencing - Room: {room}</h2>
+    {#if gs.gameOver}
+      <p class="game-over">{gs.winner}</p>
+    {/if}
+    <div class="game-status">{gs.lastAction || "Choose an action!"}</div>
+    <div class="game-turn">Turn: {gs.turn} / {gs.maxTurns}</div>
+  </header>
+  <main class="game-board-area">
+    <div class="board-row">
+      {#each getBoardActions() as val}
+        <div
+          class="board-cell {val === 'PLAYER'
+            ? 'player-cell'
+            : val === 'OPPONENT'
+              ? 'opponent-cell'
+              : ''}"
+        >
+          {#if val === "PLAYER"}
+            <span>
+              <img
+                src={actionIcons[gs.you.action] || actionIcons.DEFAULT}
+                alt={gs.you.action}
+                class="action-img"
+              />
             </span>
-          {/if}
-          {gs.you.energy}
-        </span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">Position:</span>
-        <span class="info-value"
-          >{gs.you.player === 2 ? 6 - gs.you.pos : gs.you.pos}</span
-        >
-      </div>
-      <div class="info-row">
-        <span class="info-label">Advanced:</span>
-        <span class="info-value">{gs.you.advanced ? "True" : "False"}</span>
-      </div>
-    </div>
-  </div>
-  <div>
-    <strong>Opponent</strong><br />
-    <div class="info-table">
-      <div class="info-row">
-        <span class="info-label">Energy:</span>
-        <span class="info-value">
-          {#if opponentEnergyChange !== 0}
-            <span
-              style="color: {opponentEnergyChange > 0
-                ? 'green'
-                : 'red'}; font-weight: bold; margin-left: 0.5em;"
-            >
-              ({opponentEnergyChange > 0 ? "+" : ""}{opponentEnergyChange})
+          {:else if val === "OPPONENT"}
+            <span>
+              <img
+                src={actionIcons[gs.opponent.action] || actionIcons.DEFAULT}
+                alt={gs.opponent.action}
+                class="action-img reverse-img"
+              />
             </span>
+          {:else}
+            <span></span>
           {/if}
-          {gs.opponent.energy}
-        </span>
+        </div>
+      {/each}
+    </div>
+  </main>
+  <aside class="game-player-info">
+    <div class="player-info-row">
+      <div>
+        <strong>You</strong><br />
+        <div class="info-table">
+          <div class="info-row">
+            <span class="info-label">Energy:</span>
+            <span class="info-value">
+              {#if youEnergyChange !== 0}
+                <span
+                  style="color: {youEnergyChange > 0
+                    ? 'green'
+                    : 'red'}; font-weight: bold; margin-left: 0.5em;"
+                >
+                  ({youEnergyChange > 0 ? "+" : ""}{youEnergyChange})
+                </span>
+              {/if}
+              {gs.you.energy}
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Position:</span>
+            <span class="info-value"
+              >{gs.you.player === 2 ? 6 - gs.you.pos : gs.you.pos}</span
+            >
+          </div>
+          <div class="info-row">
+            <span class="info-label">Advanced:</span>
+            <span class="info-value">{gs.you.advanced ? "True" : "False"}</span>
+          </div>
+        </div>
       </div>
-      <div class="info-row">
-        <span class="info-label">Position:</span>
-        <span class="info-value"
-          >{gs.you.player === 2 ? 6 - gs.opponent.pos : gs.opponent.pos}</span
-        >
-      </div>
-      <div class="info-row">
-        <span class="info-label">Advanced:</span>
-        <span class="info-value">{gs.opponent.advanced ? "True" : "False"}</span
-        >
+      <div>
+        <strong>Opponent</strong><br />
+        <div class="info-table">
+          <div class="info-row">
+            <span class="info-label">Energy:</span>
+            <span class="info-value">
+              {#if opponentEnergyChange !== 0}
+                <span
+                  style="color: {opponentEnergyChange > 0
+                    ? 'green'
+                    : 'red'}; font-weight: bold; margin-left: 0.5em;"
+                >
+                  ({opponentEnergyChange > 0 ? "+" : ""}{opponentEnergyChange})
+                </span>
+              {/if}
+              {gs.opponent.energy}
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Position:</span>
+            <span class="info-value"
+              >{gs.you.player === 2
+                ? 6 - gs.opponent.pos
+                : gs.opponent.pos}</span
+            >
+          </div>
+          <div class="info-row">
+            <span class="info-label">Advanced:</span>
+            <span class="info-value"
+              >{gs.opponent.advanced ? "True" : "False"}</span
+            >
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
-<div class="actions-section">
-  <strong>Actions:</strong>
-  <div class="actions-row">
-    {#each actions as act}
-      <button
-        aria-label={act.name}
-        disabled={gs.gameOver}
-        onclick={() => handleAction(act.name)}
-      >
-        <img
-          src={actionIcons[act.name] || actionIcons.DEFAULT}
-          alt={act.name}
-          class="action-btn-img"
-        />
-        {act.name} ({act.key})<br /><small>{act.desc}</small>
-      </button>
-    {/each}
-  </div>
+  </aside>
+  <footer class="game-actions-area">
+    <strong class="text-center">Actions:</strong>
+    <div class="actions-row">
+      {#each actions as act}
+        <button
+          aria-label={act.name}
+          disabled={gs.gameOver}
+          onclick={() => handleAction(act.name)}
+        >
+          <img
+            src={actionIcons[act.name] || actionIcons.DEFAULT}
+            alt={act.name}
+            class="action-btn-img"
+          />
+          {act.name} ({act.key})<br /><small>{act.desc}</small>
+        </button>
+      {/each}
+    </div>
+  </footer>
 </div>
 
 <style>
-  .info-table {
-    display: flex;
-    flex-direction: column;
-    margin-top: 0.5em;
-  }
-  .info-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .info-label {
-    text-align: left;
-    min-width: 110px;
-    font-weight: 600;
-  }
-  .info-value {
-    text-align: right;
-    font-weight: 600;
-  }
+  @import "../styles/game.css";
 </style>

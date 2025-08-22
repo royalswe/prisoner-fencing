@@ -7,11 +7,9 @@
   const states = useState();
 </script>
 
-<main>
-  <ThemeSwitcher />
-  {#if states.currentRoom}
-    <Game room={states.currentRoom} />
-  {:else}
-    <Lobby />
-  {/if}
-</main>
+<ThemeSwitcher />
+{#if states.currentRoom}
+  <Game room={states.currentRoom} />
+{:else}
+  <Lobby />
+{/if}

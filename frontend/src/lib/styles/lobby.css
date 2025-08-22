@@ -11,11 +11,16 @@ main {
   background: linear-gradient(135deg, #ffb347 0%, #ffcc80 100%);
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
-  padding: 2rem;
+  padding: 2rem 0;
   margin: 2rem 0;
   max-width: 420px;
   width: 100%;
-  transition: background 0.2s;
+}
+
+@media (min-width: 768px) {
+  .lobby-card {
+    padding: 2rem;
+  }
 }
 
 :root[data-theme="dark"] .lobby-card {
@@ -24,8 +29,7 @@ main {
 
 .room-list {
   list-style: none;
-  padding: 0;
-  margin: 1rem 0;
+  padding: 0 1rem;
 }
 .room-list li {
   background: var(--toggle-bg);
@@ -60,6 +64,7 @@ main {
   display: flex;
   gap: 0.5rem;
   margin-top: 1rem;
+  padding: 1rem;
 }
 .input-row input {
   flex: 1;
@@ -69,7 +74,6 @@ main {
   font-size: 1em;
   background: var(--toggle-bg);
   color: var(--toggle-fg);
-  transition: border-color 0.2s;
 }
 .input-row input:focus {
   border-color: #646cff;

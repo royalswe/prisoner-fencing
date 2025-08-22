@@ -1,6 +1,4 @@
 @import "./theme.css";
-@import "./lobby.css";
-@import "./game.css";
 
 a {
   font-weight: 500;
@@ -27,12 +25,11 @@ h1 {
   line-height: 1.1;
 }
 
-#app {
+/* #app {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
-}
+} */
 
 button {
   border-radius: 8px;
@@ -56,4 +53,9 @@ button:focus-visible {
 .js-highlight {
   outline: 3px solid #d0ff00ff !important;
   box-shadow: 0 0 8px #d0ff00ff;
+}
+
+/** Utility classes */
+.mb-0 {
+  margin-bottom: 0;
 }
