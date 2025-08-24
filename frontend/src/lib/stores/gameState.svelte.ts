@@ -6,6 +6,7 @@ type PlayerState = {
 	player?: number;
 };
 
+let status = $state<string>('');
 let turn = $state<number>(0);
 let maxTurns = $state<number>(20);
 let lastAction = $state<string>('');
@@ -21,6 +22,8 @@ let you = $state<PlayerState>({
 
 export function gameState() {
 	return {
+		get status() { return status; },
+		set status(value) { status = value; },
 		get turn() { return turn; },
 		set turn(value) { turn = value; },
 		get maxTurns() { return maxTurns; },

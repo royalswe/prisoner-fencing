@@ -28,10 +28,10 @@ export const connect = (socketURL: string) => {
 	ws.addEventListener('open', () => {
 		states.userState = 'connected';
 		ws.send(JSON.stringify({ type: "init_client", payload: { playerId: PLAYER_ID } }));
-		// send("join_room", {
-		// 	"room": "default",
-		// 	"playerId": PLAYER_ID,
-		// });
+		send("join_room", {
+			"room": "default",
+			"playerId": PLAYER_ID,
+		});
 		ws.send(JSON.stringify({ type: "list_rooms" }));
 	});
 

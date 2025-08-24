@@ -88,6 +88,26 @@ func JoinRoomHandler(event Event, c *Client) error {
 	}
 	c.room = joinRoomEvent.Room
 
+	// Initialize GameState for the room if it doesn't exist
+	if _, ok := roomStates[c.room]; !ok {
+		roomStates[c.room] = &GameState{
+			Turn:         1,
+			MaxTurns:     20,
+			Status:       "Waiting for opponent to arrive",
+			PlayerStates: make(map[string]PlayerState),
+		}
+	}
+	gs := roomStates[c.room]
+	// If less than two players, add this client as PlayerState
+	if _, exists := gs.PlayerStates[c.id]; !exists && len(gs.PlayerStates) < 2 {
+		pos := 2
+		if len(gs.PlayerStates) > 0 {
+			pos = 4
+			gs.Status = "Choose an action!"
+		}
+		gs.PlayerStates[c.id] = PlayerState{Pos: pos, Energy: 10, Action: "", Advanced: false, Player: len(gs.PlayerStates) + 1}
+	}
+
 	emit(Event{
 		Type:    EventJoinRoom,
 		Payload: json.RawMessage(fmt.Sprintf(`{"room": "%s"}`, joinRoomEvent.Room)),

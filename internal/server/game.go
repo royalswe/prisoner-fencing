@@ -11,6 +11,7 @@ type GameState struct {
 	LastAction   string                 `json:"lastAction"`
 	GameOver     bool                   `json:"gameOver"`
 	Winner       string                 `json:"winner"`
+	Status       string                 `json:"status"`
 	PlayerStates map[string]PlayerState `json:"playerStates"` // id -> state
 }
 
@@ -37,25 +38,15 @@ func GameActionHandler(event Event, c *Client) error {
 
 	gs, ok := roomStates[payload.Room]
 	if !ok {
-		gs = &GameState{
-			Turn:         1,
-			MaxTurns:     20,
-			PlayerStates: make(map[string]PlayerState),
-		}
-		roomStates[payload.Room] = gs
+		return fmt.Errorf("game state not initialized for room: %s", payload.Room)
 	}
 
-	// Set or update player state
-	if _, exists := gs.PlayerStates[c.id]; !exists {
-		pos := 2
-		if len(gs.PlayerStates) > 0 {
-			pos = 4
-		}
-		gs.PlayerStates[c.id] = PlayerState{Pos: pos, Energy: 10, Action: payload.Action, Advanced: false, Player: len(gs.PlayerStates) + 1}
-	} else {
-		ps := gs.PlayerStates[c.id]
+	// Set or update player action only
+	if ps, exists := gs.PlayerStates[c.id]; exists {
 		ps.Action = payload.Action
 		gs.PlayerStates[c.id] = ps
+	} else {
+		return fmt.Errorf("player not initialized in room: %s", payload.Room)
 	}
 
 	// Get both player ids
@@ -66,8 +57,8 @@ func GameActionHandler(event Event, c *Client) error {
 
 	if len(ids) != 2 {
 		emit(Event{
-			Type:    "WAITING_FOR_OPPONENT",
-			Payload: json.RawMessage(`{"message": "Waiting for opponent to arrive"}`),
+			Type:    "UPDATE_STATUS",
+			Payload: json.RawMessage(`{"status": "Waiting for opponent to arrive"}`),
 		}, c)
 		return nil
 	}
@@ -78,8 +69,8 @@ func GameActionHandler(event Event, c *Client) error {
 	// Check if both players have made their actions
 	if p1.Action == "" || p2.Action == "" {
 		emit(Event{
-			Type:    "WAITING_FOR_OPPONENT",
-			Payload: json.RawMessage(`{"message": "Waiting for opponent to act"}`),
+			Type:    "UPDATE_STATUS",
+			Payload: json.RawMessage(`{"status": "Waiting for opponent to act"}`),
 		}, c)
 		return nil
 	}
@@ -135,10 +126,12 @@ func GameActionHandler(event Event, c *Client) error {
 					personalized.Winner = "Draw!"
 				}
 			}
+			personalized.Status = "Choose an action!"
 
 			// If there is a winner, set personalized.GameOver to true
 			if personalized.Winner != "" {
 				personalized.GameOver = true
+				personalized.Status = "Game over!"
 			}
 
 			data, _ := json.Marshal(personalized)

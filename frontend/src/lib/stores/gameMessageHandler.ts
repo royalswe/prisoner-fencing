@@ -18,11 +18,12 @@ export function gameMessageHandler(msg: any) {
             gs.lastAction = payload.lastAction;
             gs.gameOver = payload.gameOver;
             gs.winner = payload.winner;
+            gs.status = payload.status;
             gs.opponent = payload.playerStates.opponent || {};
             gs.you = payload.playerStates.you || {};
             break;
-        case 'WAITING_FOR_OPPONENT':
-            gs.lastAction = payload.message;
+        case 'UPDATE_STATUS':
+            gs.status = payload.status;
             break;
         default:
             console.log('unknown emit from server', msg);

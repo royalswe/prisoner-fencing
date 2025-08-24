@@ -68,6 +68,17 @@
 
   // Board rendering helper
   function getBoardActions() {
+    setTimeout(() => {
+      // remove class that begins with "cell-animation-"
+      const cells = document.querySelectorAll(".board-cell");
+      cells.forEach((cell) => {
+        cell.classList.remove(
+          ...Array.from(cell.classList).filter((c) =>
+            c.startsWith("cell-animation-")
+          )
+        );
+      });
+    }, 500);
     const arr = Array(7).fill(null);
     // Only invert positions for player 2
     if (gs.you.player === 2) {
@@ -98,21 +109,26 @@
 
 <div class="game-grid-container">
   <header class="game-header">
-    <h2>Prisoner's Fencing - Room: {room}</h2>
+    <div class="game-sheader-left">
+      <span>Room: {room}</span>
+      <div>Turn: {gs.turn} / {gs.maxTurns}</div>
+      <div>
+        Status: {gs.status || "Welcome!"}
+      </div>
+    </div>
+
     {#if gs.gameOver}
       <p class="game-over">{gs.winner}</p>
     {/if}
-    <div class="game-status">{gs.lastAction || "Choose an action!"}</div>
-    <div class="game-turn">Turn: {gs.turn} / {gs.maxTurns}</div>
   </header>
   <main class="game-board-area">
     <div class="board-row">
       {#each getBoardActions() as val}
         <div
           class="board-cell {val === 'PLAYER'
-            ? 'player-cell'
+            ? 'player-cell cell-animation-' + gs.turn
             : val === 'OPPONENT'
-              ? 'opponent-cell'
+              ? 'opponent-cell cell-animation-' + gs.turn
               : ''}"
         >
           {#if val === "PLAYER"}
@@ -140,39 +156,37 @@
   </main>
   <aside class="game-player-info">
     <div class="player-info-row">
-      <div>
-        <strong>You</strong><br />
-        <div class="info-table">
-          <div class="info-row">
-            <span class="info-label">Energy:</span>
-            <span class="info-value">
-              {#if youEnergyChange !== 0}
-                <span
-                  style="color: {youEnergyChange > 0
-                    ? 'green'
-                    : 'red'}; font-weight: bold; margin-left: 0.5em;"
-                >
-                  ({youEnergyChange > 0 ? "+" : ""}{youEnergyChange})
-                </span>
-              {/if}
-              {gs.you.energy}
-            </span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Position:</span>
-            <span class="info-value"
-              >{gs.you.player === 2 ? 6 - gs.you.pos : gs.you.pos}</span
-            >
-          </div>
-          <div class="info-row">
-            <span class="info-label">Advanced:</span>
-            <span class="info-value">{gs.you.advanced ? "True" : "False"}</span>
-          </div>
+      <div class="info-table">
+        <strong>You</strong>
+        <div class="info-row">
+          <span class="info-label">Energy:</span>
+          <span class="info-value">
+            {#if youEnergyChange !== 0}
+              <span
+                style="color: {youEnergyChange > 0
+                  ? 'green'
+                  : 'red'}; font-weight: bold; margin-left: 0.5em;"
+              >
+                ({youEnergyChange > 0 ? "+" : ""}{youEnergyChange})
+              </span>
+            {/if}
+            {gs.you.energy}
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Position:</span>
+          <span class="info-value"
+            >{gs.you.player === 2 ? 6 - gs.you.pos : gs.you.pos}</span
+          >
+        </div>
+        <div class="info-row">
+          <span class="info-label">Advanced:</span>
+          <span class="info-value">{gs.you.advanced ? "True" : "False"}</span>
         </div>
       </div>
-      <div>
-        <strong>Opponent</strong><br />
-        <div class="info-table">
+      <div class="info-table">
+        <strong>Opponent</strong>
+        <div>
           <div class="info-row">
             <span class="info-label">Energy:</span>
             <span class="info-value">

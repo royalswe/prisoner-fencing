@@ -88,7 +88,6 @@
 <style>
   .lobby-grid-container {
     display: grid;
-    grid-template-rows: 120px 1fr;
     grid-template-areas:
       "header"
       "main";
@@ -108,7 +107,7 @@
   .lobby-header h1 {
     letter-spacing: 2px;
     font-size: 2.5em;
-    margin-bottom: 0.2em;
+    margin-bottom: 1em;
   }
   .lobby-header h2 {
     margin-top: 0;
@@ -161,10 +160,9 @@
     padding: 0.3em 1em;
     font-weight: bold;
     cursor: pointer;
-    transition: background 0.2s;
   }
   .room-list li button:hover {
-    filter: brightness(1.1);
+    filter: brightness(1.2);
   }
 
   :root[data-theme="dark"] .input-row button {
@@ -206,7 +204,7 @@
     transition: background 0.2s;
   }
   .input-row button:hover {
-    filter: brightness(1.1);
+    filter: brightness(1.2);
   }
   .error {
     color: #d32f2f;
