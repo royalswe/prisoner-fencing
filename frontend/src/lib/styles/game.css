@@ -154,15 +154,16 @@ button[aria-label]:hover {
 }
 
 :root[data-theme="dark"] .game-over {
-  color: #23cb00;
 }
 
 .game-over {
-  font-size: 1.5em;
+  font-size: 2em;
   color: #e400e6;
+  background: #7fff00;
   font-weight: 700;
   margin-bottom: 1em;
   text-align: center;
+  z-index: 2;
 }
 
 .text-center {

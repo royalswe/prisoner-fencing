@@ -3,7 +3,6 @@ import { gameState } from './gameState.svelte';
 
 const gs = gameState();
 
-
 export function gameMessageHandler(msg: any) {
     console.log('Received game message:', msg);
     const payload = msg.payload;

@@ -113,7 +113,7 @@
       <span>Room: {room}</span>
       <div>Turn: {gs.turn} / {gs.maxTurns}</div>
       <div>
-        Status: {gs.status || "Welcome!"}
+        Status: {gs.status}
       </div>
     </div>
 

@@ -93,7 +93,6 @@ func JoinRoomHandler(event Event, c *Client) error {
 		roomStates[c.room] = &GameState{
 			Turn:         1,
 			MaxTurns:     20,
-			Status:       "Waiting for opponent to arrive",
 			PlayerStates: make(map[string]PlayerState),
 		}
 	}
@@ -103,7 +102,6 @@ func JoinRoomHandler(event Event, c *Client) error {
 		pos := 2
 		if len(gs.PlayerStates) > 0 {
 			pos = 4
-			gs.Status = "Choose an action!"
 		}
 		gs.PlayerStates[c.id] = PlayerState{Pos: pos, Energy: 10, Action: "", Advanced: false, Player: len(gs.PlayerStates) + 1}
 	}
@@ -112,8 +110,19 @@ func JoinRoomHandler(event Event, c *Client) error {
 		Type:    EventJoinRoom,
 		Payload: json.RawMessage(fmt.Sprintf(`{"room": "%s"}`, joinRoomEvent.Room)),
 	}, c)
+
 	// get list of rooms
 	ListRoomHandler(Event{Type: EventListRooms}, c)
+
+	status := "Waiting for opponent to arrive"
+	if len(gs.PlayerStates) > 1 {
+		status = "Game in progress, choose an action!"
+	}
+	roomEmit(Event{
+		Type:    "UPDATE_STATUS",
+		Payload: json.RawMessage(fmt.Sprintf(`{"status": "%s"}`, status)),
+	}, c.room, c.hub)
+
 	return nil
 }
 
