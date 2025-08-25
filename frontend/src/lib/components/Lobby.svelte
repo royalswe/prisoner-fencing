@@ -1,10 +1,12 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import HowToPlayModal from "./HowToPlayModal.svelte";
   import { useState } from "../stores/state.svelte";
   import { PLAYER_ID } from "../constants/player";
   import { connect, send } from "../ws";
 
   const states = useState();
+  let showHowToPlay = false;
   let newRoomName = "";
   let newMessage = "";
 
@@ -53,6 +55,14 @@
       </div>
     </header>
     <main class="lobby-main-area">
+      <button class="how-to-play-btn" onclick={() => (showHowToPlay = true)}
+        >How to Play</button
+      >
+      <HowToPlayModal
+        open={showHowToPlay}
+        onClose={() => (showHowToPlay = false)}
+      />
+
       {#if !states.userState}
         <div>Connecting to lobby...</div>
       {:else}
@@ -96,6 +106,23 @@
     box-sizing: border-box;
     overflow: hidden;
   }
+  .how-to-play-btn {
+    background: linear-gradient(90deg, #f7971e 0%, #ffd200 100%);
+    color: #222;
+    border: none;
+    border-radius: 8px;
+    padding: 0.7em 1.5em;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 1.2em;
+    font-size: 1.1em;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    transition: background 0.2s;
+  }
+  .how-to-play-btn:hover {
+    filter: brightness(1.1);
+  }
+
   .lobby-header {
     grid-area: header;
     display: flex;
