@@ -52,16 +52,16 @@
     if (gs.gameOver) return;
     const action = actions.find((a) => a.name === key);
     if (!action) return;
-    // Remove highlight from all buttons
+    // Remove active from all buttons
     const buttons = document.querySelectorAll("button[aria-label]");
-    buttons.forEach((btn) => btn.classList.remove("js-highlight"));
-    // Highlight selected action
+    buttons.forEach((btn) => btn.classList.remove("js-active"));
+    // active selected action
     const button = document.querySelector(
       `button[aria-label="${action.name}"]`
     );
 
     if (button) {
-      button.classList.add("js-highlight");
+      button.classList.add("js-active");
     }
     send("game_action", { room, playerId: PLAYER_ID, action: key });
   }
@@ -118,7 +118,7 @@
     </div>
 
     {#if gs.gameOver}
-      <p class="game-over">{gs.winner}</p>
+      <span class="game-over">{gs.winner}</span>
     {/if}
   </header>
   <main class="game-board-area">
@@ -221,23 +221,25 @@
     </div>
   </aside>
   <footer class="game-actions-area">
-    <strong class="text-center">Actions:</strong>
-    <div class="actions-row">
-      {#each actions as act}
-        <button
-          aria-label={act.name}
-          disabled={gs.gameOver}
-          onclick={() => handleAction(act.name)}
-        >
-          <img
-            src={actionIcons[act.name] || actionIcons.DEFAULT}
-            alt={act.name}
-            class="action-btn-img"
-          />
-          {act.name} ({act.key})<br /><small>{act.desc}</small>
-        </button>
-      {/each}
-    </div>
+    {#if gs.gameOver}
+      <strong class="text-center">Thanks for playing!</strong>
+      <button type="button" onclick={() => window.location.reload()}>
+        Return to Lobby
+      </button>
+    {:else}
+      <div class="actions-row">
+        {#each actions as act}
+          <button aria-label={act.name} onclick={() => handleAction(act.name)}>
+            <img
+              src={actionIcons[act.name] || actionIcons.DEFAULT}
+              alt={act.name}
+              class="action-btn-img"
+            />
+            {act.name} ({act.key})<br /><small>{act.desc}</small>
+          </button>
+        {/each}
+      </div>
+    {/if}
   </footer>
 </div>
 

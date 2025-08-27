@@ -134,36 +134,38 @@
 }
 
 button[aria-label] {
-  background: linear-gradient(90deg, #f7971e 0%, #ffd200 100%);
-  color: #222;
-  border: none;
-  border-radius: 10px;
+  color: var(--btn-fg);
+  background-color: var(--btn-bg);
+  border: transparent;
+  border-radius: 12px;
   padding: 0.7em 1.2em;
   font-weight: bold;
+  font-size: 1em;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
-  transition: background 0.2s;
-}
-button[aria-label]:hover {
-  filter: brightness(1.1);
-}
-
-:root[data-theme="dark"] button[aria-label] {
-  background: linear-gradient(90deg, #232526 0%, #414345 100%);
-  color: #eee;
+  box-shadow: 0 8px 0 var(--box-shadow), 2px 6px 5px;
+  -webkit-transition: box-shadow 0.15s, transform 0.15s;
+  transition: box-shadow 0.15s, transform 0.15s;
+  position: relative;
 }
 
-:root[data-theme="dark"] .game-over {
+button[aria-label]:hover,
+button[aria-label]:focus {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 0 var(--box-shadow), 3px 6px 5px;
+}
+button[aria-label]:active {
+  transform: translateY(4px);
+  box-shadow: 0 4px 0 var(--box-shadow), 0.5px 2px 0px;
 }
 
-.game-over {
-  font-size: 2em;
-  color: #e400e6;
-  background: #7fff00;
-  font-weight: 700;
-  margin-bottom: 1em;
-  text-align: center;
-  z-index: 2;
+.js-active {
+  transform: translateY(4px) !important;
+  box-shadow: 0 4px 0 var(--box-shadow), 0.5px 2px 0px !important;
+  background: linear-gradient(
+    358deg,
+    var(--btn-bg) 50% 0,
+    #fff0f0c4 100%
+  ) !important;
 }
 
 .text-center {
@@ -195,4 +197,16 @@ button[aria-label]:hover {
 .info-value {
   text-align: right;
   font-weight: 600;
+}
+
+.game-over {
+  text-align: center;
+  font-size: 2em;
+  font-weight: 800;
+  color: #ff00d3;
+  text-transform: uppercase;
+  background: linear-gradient(#d82150, #d35cec);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  z-index: 2;
 }

@@ -19,10 +19,16 @@
   --fg: #222;
   --toggle-bg: #eee;
   --toggle-fg: #222;
+  --btn-bg: #ffae0b;
+  --btn-fg: #222;
+  --box-shadow: #d38000;
 }
 :root[data-theme="dark"] {
   --bg: linear-gradient(135deg, #133146ff 0%, #2f264fff 100%);
   --fg: #eee;
   --toggle-bg: #333;
   --toggle-fg: #eee;
+  --btn-bg: #4f5b93;
+  --btn-fg: #fff;
+  --box-shadow: #7a89c2;
 }
