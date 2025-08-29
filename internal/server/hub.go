@@ -44,11 +44,6 @@ func InitClientHandler(event Event, c *Client) error {
 }
 
 func ListRoomHandler(event Event, c *Client) error {
-	// var listRoomEvent ListRoomEvent
-	// if err := json.Unmarshal(event.Payload, &listRoomEvent); err != nil {
-	// 	return fmt.Errorf("failed to unmarshal list room event: %v", err)
-	// }
-
 	var rooms []string
 	for client := range c.hub.client {
 		if client.room != "" && !contains(rooms, client.room) {
@@ -88,39 +83,79 @@ func JoinRoomHandler(event Event, c *Client) error {
 	}
 	c.room = joinRoomEvent.Room
 
-	// Initialize GameState for the room if it doesn't exist
-	if _, ok := roomStates[c.room]; !ok {
-		roomStates[c.room] = &GameState{
-			Turn:         1,
-			MaxTurns:     20,
-			PlayerStates: make(map[string]PlayerState),
-		}
-	}
-	gs := roomStates[c.room]
-	// If less than two players, add this client as PlayerState
-	if _, exists := gs.PlayerStates[c.id]; !exists && len(gs.PlayerStates) < 2 {
-		pos := 2
-		if len(gs.PlayerStates) > 0 {
-			pos = 4
-		}
-		gs.PlayerStates[c.id] = PlayerState{Pos: pos, Energy: 10, Action: "", Advanced: false, Player: len(gs.PlayerStates) + 1}
-	}
-
 	emit(Event{
 		Type:    EventJoinRoom,
 		Payload: json.RawMessage(fmt.Sprintf(`{"room": "%s"}`, joinRoomEvent.Room)),
 	}, c)
 
+	// Initialize GameState for the room if it doesn't exist
+	if _, exists := RoomStates[c.room]; !exists {
+		RoomStates[c.room] = &GameState{
+			Turn:         0,
+			MaxTurns:     20,
+			GameOver:     false,
+			Status:       "Waiting for opponent to arrive",
+			PlayerStates: make(map[string]PlayerState),
+		}
+	}
+	gs := RoomStates[c.room]
+
+	// If less than two players, add this client as PlayerState
+	if _, exists := gs.PlayerStates[c.id]; !exists && len(gs.PlayerStates) < 2 {
+		if len(gs.PlayerStates) == 0 {
+			gs.PlayerStates[c.id] = PlayerState{Pos: 2, Energy: 10, Action: "", Advanced: false, Player: 1}
+
+		} else {
+			gs.Status = "Game in progress, choose an action!"
+			gs.PlayerStates[c.id] = PlayerState{Pos: 4, Energy: 10, Action: "", Advanced: false, Player: 2}
+		}
+	} else {
+		// Room full or player already exists, send game state for spectator
+		// Prepare GameState for client, replacing PlayerStates keys with "you" and "opponent"
+		var ids []string
+		for pid := range gs.PlayerStates {
+			ids = append(ids, pid)
+		}
+		p1 := gs.PlayerStates[ids[0]]
+		p2 := gs.PlayerStates[ids[1]]
+		p1.Action = "" // Prevent peek next action
+		p2.Action = "" // Prevent peek next action
+		mappedPlayerStates := make(map[string]PlayerState)
+		mappedPlayerStates["you"] = p1
+		mappedPlayerStates["opponent"] = p2
+		gsCopy := *gs
+		gsCopy.PlayerStates = mappedPlayerStates
+
+		data, _ := json.Marshal(gsCopy)
+		emit(Event{
+			Type:    "GAME_ACTION_RESULT",
+			Payload: data,
+		}, c)
+		return nil
+	}
+
 	// get list of rooms
 	ListRoomHandler(Event{Type: EventListRooms}, c)
 
-	status := "Waiting for opponent to arrive"
-	if len(gs.PlayerStates) > 1 {
-		status = "Game in progress, choose an action!"
+	// Prepare GameState for client, replacing PlayerStates keys with "you" and "opponent"
+	mappedPlayerStates := make(map[string]PlayerState)
+	for pid, ps := range gs.PlayerStates {
+		if pid == c.id {
+			mappedPlayerStates["you"] = ps
+		} else {
+			mappedPlayerStates["opponent"] = ps
+		}
+	}
+	gsCopy := *gs
+	gsCopy.PlayerStates = mappedPlayerStates
+
+	data, err := json.Marshal(gsCopy)
+	if err != nil {
+		return fmt.Errorf("failed to marshal join room response: %v", err)
 	}
 	roomEmit(Event{
-		Type:    "UPDATE_STATUS",
-		Payload: json.RawMessage(fmt.Sprintf(`{"status": "%s"}`, status)),
+		Type:    "GAME_ACTION_RESULT",
+		Payload: data,
 	}, c.room, c.hub)
 
 	return nil

@@ -1,5 +1,5 @@
 type PlayerState = {
-	pos: number;
+	pos?: number;
 	energy: number;
 	action: string;
 	advanced: boolean;
@@ -14,7 +14,7 @@ let gameOver = $state<boolean>(false);
 let winner = $state<string>('');
 let waitingForOpponent = $state<boolean>(false);
 let opponent = $state<PlayerState>({
-	pos: 4, energy: 10, action: '', advanced: false
+	energy: 10, action: '', advanced: false
 });
 let you = $state<PlayerState>({
 	pos: 2, energy: 10, action: '', advanced: false

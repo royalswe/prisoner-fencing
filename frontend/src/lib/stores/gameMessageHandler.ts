@@ -12,14 +12,14 @@ export function gameMessageHandler(msg: any) {
             console.log('lobbyerror', msg);
             break;
         case 'GAME_ACTION_RESULT':
-            gs.turn = payload.turn;
-            gs.maxTurns = payload.maxTurns;
-            gs.lastAction = payload.lastAction;
-            gs.gameOver = payload.gameOver;
-            gs.winner = payload.winner;
-            gs.status = payload.status;
-            gs.opponent = payload.playerStates.opponent || {};
-            gs.you = payload.playerStates.you || {};
+            if (payload.turn !== undefined) gs.turn = payload.turn;
+            if (payload.maxTurns !== undefined) gs.maxTurns = payload.maxTurns;
+            if (payload.lastAction !== undefined) gs.lastAction = payload.lastAction;
+            if (payload.gameOver !== undefined) gs.gameOver = payload.gameOver;
+            if (payload.winner !== undefined) gs.winner = payload.winner;
+            if (payload.status !== undefined) gs.status = payload.status;
+            if (payload.playerStates?.opponent !== undefined) gs.opponent = payload.playerStates.opponent;
+            if (payload.playerStates?.you !== undefined) gs.you = payload.playerStates.you;
             break;
         case 'UPDATE_STATUS':
             gs.status = payload.status;

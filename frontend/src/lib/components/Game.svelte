@@ -80,13 +80,16 @@
       });
     }, 500);
     const arr = Array(7).fill(null);
+    if (typeof gs.you.pos !== "number") {
+      return arr;
+    }
     // Only invert positions for player 2
     if (gs.you.player === 2) {
       arr[6 - gs.you.pos] = "PLAYER";
-      arr[6 - gs.opponent.pos] = "OPPONENT";
+      if (gs.opponent?.pos) arr[6 - gs.opponent.pos] = "OPPONENT";
     } else {
       arr[gs.you.pos] = "PLAYER";
-      arr[gs.opponent.pos] = "OPPONENT";
+      if (gs.opponent?.pos) arr[gs.opponent.pos] = "OPPONENT";
     }
     return arr;
   }
@@ -116,7 +119,6 @@
         Status: {gs.status}
       </div>
     </div>
-
     {#if gs.gameOver}
       <span class="game-over">{gs.winner}</span>
     {/if}
@@ -131,25 +133,21 @@
               ? 'opponent-cell cell-animation-' + gs.turn
               : ''}"
         >
-          {#if val === "PLAYER"}
-            <span>
+          <span>
+            {#if val === "PLAYER"}
               <img
-                src={actionIcons[gs.you.action] || actionIcons.DEFAULT}
-                alt={gs.you.action}
+                src={actionIcons[gs.you?.action] || actionIcons.DEFAULT}
+                alt={gs.you?.action}
                 class="action-img"
               />
-            </span>
-          {:else if val === "OPPONENT"}
-            <span>
+            {:else if val === "OPPONENT"}
               <img
-                src={actionIcons[gs.opponent.action] || actionIcons.DEFAULT}
-                alt={gs.opponent.action}
+                src={actionIcons[gs.opponent?.action] || actionIcons.DEFAULT}
+                alt={gs.opponent?.action}
                 class="action-img reverse-img"
               />
-            </span>
-          {:else}
-            <span></span>
-          {/if}
+            {/if}
+          </span>
         </div>
       {/each}
     </div>

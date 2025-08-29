@@ -23,7 +23,7 @@ type PlayerState struct {
 	Player   int    `json:"player"` // 1 for you, 2 for opponent
 }
 
-var roomStates = make(map[string]*GameState)
+var RoomStates = make(map[string]*GameState)
 
 func GameActionHandler(event Event, c *Client) error {
 
@@ -36,7 +36,7 @@ func GameActionHandler(event Event, c *Client) error {
 		return fmt.Errorf("failed to unmarshal game action: %v", err)
 	}
 
-	gs, ok := roomStates[payload.Room]
+	gs, ok := RoomStates[payload.Room]
 	if !ok {
 		return fmt.Errorf("game state not initialized for room: %s", payload.Room)
 	}
@@ -98,12 +98,17 @@ func GameActionHandler(event Event, c *Client) error {
 		if client.room == payload.Room {
 			// Assign 'you' and 'opponent' based on client.id
 			var youState, opponentState PlayerState
-			for pid, state := range gs.PlayerStates {
-				if pid == client.id {
-					youState = state
-				} else {
-					opponentState = state
+			if client.id == ids[0] || client.id == ids[1] {
+				for pid, state := range gs.PlayerStates {
+					if pid == client.id {
+						youState = state
+					} else {
+						opponentState = state
+					}
 				}
+			} else {
+				youState = gs.PlayerStates[ids[0]]
+				opponentState = gs.PlayerStates[ids[1]]
 			}
 			personalized := *gs
 			personalized.PlayerStates = map[string]PlayerState{
@@ -147,6 +152,10 @@ func GameActionHandler(event Event, c *Client) error {
 	p2.Action = ""
 	gs.PlayerStates[ids[0]] = p1
 	gs.PlayerStates[ids[1]] = p2
+	if gs.GameOver {
+		// Remove GameState
+		delete(RoomStates, c.room)
+	}
 	return nil
 }
 
