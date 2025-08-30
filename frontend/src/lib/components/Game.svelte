@@ -86,10 +86,12 @@
     // Only invert positions for player 2
     if (gs.you.player === 2) {
       arr[6 - gs.you.pos] = "PLAYER";
-      if (gs.opponent?.pos) arr[6 - gs.opponent.pos] = "OPPONENT";
+      if (typeof gs.opponent?.pos === "number")
+        arr[6 - gs.opponent.pos] = "OPPONENT";
     } else {
       arr[gs.you.pos] = "PLAYER";
-      if (gs.opponent?.pos) arr[gs.opponent.pos] = "OPPONENT";
+      if (typeof gs.opponent?.pos === "number")
+        arr[gs.opponent.pos] = "OPPONENT";
     }
     return arr;
   }
@@ -174,7 +176,11 @@
         <div class="info-row">
           <span class="info-label">Position:</span>
           <span class="info-value"
-            >{gs.you.player === 2 ? 6 - gs.you.pos : gs.you.pos}</span
+            >{typeof gs.you.pos === "number"
+              ? gs.you.player === 2
+                ? 6 - gs.you.pos
+                : gs.you.pos
+              : "-"}</span
           >
         </div>
         <div class="info-row">
@@ -203,9 +209,11 @@
           <div class="info-row">
             <span class="info-label">Position:</span>
             <span class="info-value"
-              >{gs.you.player === 2
-                ? 6 - gs.opponent.pos
-                : gs.opponent.pos}</span
+              >{typeof gs.opponent.pos === "number"
+                ? gs.you.player === 2
+                  ? 6 - gs.opponent.pos
+                  : gs.opponent.pos
+                : "-"}</span
             >
           </div>
           <div class="info-row">
