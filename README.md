@@ -1,12 +1,12 @@
 # Project prisoner-fencing
 
-One Paragraph of project description goes here
+Simple game inspired by a Reddit post on r/gameideas.
+Made with golang and svelte
+Game is under development.
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
-
-## MakeFile
+### MakeFile
 
 Run build make command with tests
 
@@ -48,6 +48,12 @@ Live reload the application:
 
 ```bash
 make watch
+```
+
+Live reload both front-end and back-end:
+
+```bash
+make watch-all
 ```
 
 Run the test suite:
